@@ -1,0 +1,260 @@
+/**
+ * styles/glass.css — Glassmorphism（玻璃拟态）
+ * 关键视觉特征：半透明 + 背景模糊 + 微妙边框 + 渐变背景
+ */
+
+/* ===== 背景 ===== */
+.style-glass body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background-attachment: fixed;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.style-glass #app {
+  background: transparent;
+}
+
+/* ===== Header ===== */
+.style-glass .app-header {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.style-glass .logo {
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* ===== Style Switcher ===== */
+.style-glass .style-btn {
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff !important;
+}
+
+.style-glass .style-btn.active {
+  border-color: #fff;
+  box-shadow: 0 0 20px rgba(255,255,255,0.3);
+}
+
+/* ===== Sidebar ===== */
+.style-glass .ai-sidebar {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.style-glass .ai-sidebar-title {
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255,255,255,0.9);
+}
+
+.style-glass .ai-sidebar-item {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255,255,255,0.85);
+}
+
+/* ===== Module Tabs ===== */
+.style-glass .module-tabs {
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.style-glass .tab-btn {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.style-glass .tab-btn.active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+.style-glass .tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px 8px 0 0;
+}
+
+/* ===== Cards ===== */
+.style-glass .card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.style-glass .card-title {
+  color: #fff;
+}
+
+/* ===== Knowledge Cards ===== */
+.style-glass .knowledge-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+}
+
+.style-glass .tag {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Buttons ===== */
+.style-glass .btn {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 12px;
+}
+
+.style-glass .btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(255,255,255,0.15);
+}
+
+.style-glass .btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Inputs ===== */
+.style-glass .input-field {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.style-glass .input-field::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.style-glass .input-field:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+/* ===== Chat ===== */
+.style-glass .chat-message.user {
+  background: rgba(102, 126, 234, 0.4);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.style-glass .chat-message.assistant {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.style-glass .chat-message .citation-link {
+  background: rgba(102, 126, 234, 0.4);
+  color: #a8b4ff;
+}
+
+/* ===== Pipeline ===== */
+.style-glass .pipeline-node {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+}
+
+.style-glass .pipeline-node.active {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 30px rgba(102,126,234,0.3);
+}
+
+.style-glass .pipeline-node.completed {
+  background: rgba(107, 203, 119, 0.25);
+  border-color: rgba(107, 203, 119, 0.4);
+}
+
+.style-glass .pipeline-connector {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.style-glass .pipeline-output {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ===== Deliverables ===== */
+.style-glass .deliverable-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+}
+
+.style-glass .deliverable-preview .preview-content {
+  background: rgba(30, 30, 60, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: #fff;
+}
+
+/* ===== Toast ===== */
+.style-glass .toast {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* ===== Typography ===== */
+.style-glass h1, .style-glass h2, .style-glass h3 {
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.style-glass p, .style-glass .subtitle {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ===== Light Border Glow ===== */
+.style-glass .card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.4), transparent, rgba(255,255,255,0.1));
+  z-index: -1;
+  opacity: 0.6;
+}
+
+.style-glass .card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gradient background decoration */
+.style-glass .content-area::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.05) 0%, transparent 50%),
+              radial-gradient(circle at 70% 30%, rgba(102,126,234,0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}

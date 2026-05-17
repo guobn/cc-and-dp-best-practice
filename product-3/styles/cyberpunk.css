@@ -1,0 +1,421 @@
+/**
+ * styles/cyberpunk.css — Cyberpunk / Retrofuturism（赛博朋克）
+ * 关键视觉特征：霓虹色（青/品红/紫）+ 黑底 + 故障特效 + 扫描线 + 等宽字体
+ */
+
+/* ===== Google Font Import ===== */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+/* ===== 背景 ===== */
+.style-cyberpunk body {
+  background: #0a0a0a;
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+.style-cyberpunk #app {
+  background: #0a0a0a;
+  position: relative;
+}
+
+/* Scanline overlay */
+.style-cyberpunk #app::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 249, 0.03) 2px,
+    rgba(0, 255, 249, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9997;
+  animation: scanline-move 8s linear infinite;
+}
+
+@keyframes scanline-move {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+/* ===== Header ===== */
+.style-cyberpunk .app-header {
+  background: rgba(10, 10, 10, 0.95);
+  border-bottom: 1px solid #00fff9;
+  box-shadow: 0 0 15px rgba(0, 255, 249, 0.2);
+}
+
+.style-cyberpunk .logo {
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  color: #00fff9;
+  text-shadow: 0 0 10px rgba(0, 255, 249, 0.5), 0 0 20px rgba(0, 255, 249, 0.3);
+  letter-spacing: 3px;
+}
+
+/* ===== Style Switcher ===== */
+.style-cyberpunk .style-btn {
+  border: 1px solid #00fff9 !important;
+  border-radius: 0 !important;
+  background: #0a0a0a !important;
+  box-shadow: 0 0 8px rgba(0, 255, 249, 0.3) !important;
+  color: #00fff9 !important;
+}
+
+.style-cyberpunk .style-btn.active {
+  box-shadow: 0 0 15px rgba(0, 255, 249, 0.5), 0 0 30px rgba(0, 255, 249, 0.2) !important;
+  background: rgba(0, 255, 249, 0.1) !important;
+}
+
+.style-cyberpunk .style-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 249, 0.6) !important;
+}
+
+/* ===== Sidebar ===== */
+.style-cyberpunk .ai-sidebar {
+  background: rgba(10, 10, 10, 0.95);
+  border-right: 1px solid #ff00ff;
+  box-shadow: -5px 0 15px rgba(255, 0, 255, 0.1);
+}
+
+.style-cyberpunk .ai-sidebar-title {
+  color: #ff00ff;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 0, 255, 0.3);
+}
+
+.style-cyberpunk .ai-sidebar-item {
+  background: rgba(255, 0, 255, 0.05);
+  border: 1px solid rgba(0, 255, 249, 0.2);
+  border-radius: 0;
+  color: #ccc;
+}
+
+.style-cyberpunk .ai-sidebar-item .value {
+  color: #00fff9;
+}
+
+/* ===== Module Tabs ===== */
+.style-cyberpunk .module-tabs {
+  border-bottom: 1px solid rgba(0, 255, 249, 0.2);
+}
+
+.style-cyberpunk .tab-btn {
+  color: rgba(0, 255, 249, 0.6);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 2px solid transparent;
+}
+
+.style-cyberpunk .tab-btn.active {
+  color: #00fff9;
+  border-bottom-color: #ff00ff;
+  text-shadow: 0 0 10px rgba(0, 255, 249, 0.5);
+}
+
+.style-cyberpunk .tab-btn:hover {
+  color: #00fff9;
+  background: rgba(0, 255, 249, 0.05);
+}
+
+/* ===== Cards ===== */
+.style-cyberpunk .card {
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid rgba(0, 255, 249, 0.3);
+  border-radius: 0;
+  box-shadow: 0 0 10px rgba(0, 255, 249, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.style-cyberpunk .card-title {
+  color: #00fff9;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.95rem;
+}
+
+/* ===== Knowledge Cards ===== */
+.style-cyberpunk .knowledge-card {
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid rgba(0, 255, 249, 0.2);
+  border-radius: 0;
+}
+
+.style-cyberpunk .knowledge-card:hover {
+  border-color: #ff00ff;
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+}
+
+.style-cyberpunk .tag {
+  background: rgba(255, 0, 255, 0.15);
+  color: #ff00ff;
+  border: 1px solid rgba(255, 0, 255, 0.3);
+  border-radius: 0;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===== Buttons ===== */
+.style-cyberpunk .btn {
+  background: transparent;
+  border: 1px solid #00fff9;
+  border-radius: 0;
+  color: #00fff9;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  box-shadow: 0 0 8px rgba(0, 255, 249, 0.2);
+}
+
+.style-cyberpunk .btn:hover {
+  background: rgba(0, 255, 249, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 249, 0.4);
+  text-shadow: 0 0 10px rgba(0, 255, 249, 0.5);
+}
+
+.style-cyberpunk .btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 30px rgba(0, 255, 249, 0.6);
+}
+
+.style-cyberpunk .btn-primary {
+  border-color: #ff00ff;
+  color: #ff00ff;
+  box-shadow: 0 0 8px rgba(255, 0, 255, 0.3);
+}
+
+.style-cyberpunk .btn-primary:hover {
+  background: rgba(255, 0, 255, 0.1);
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+}
+
+/* ===== Inputs ===== */
+.style-cyberpunk .input-field {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(0, 255, 249, 0.3);
+  border-radius: 0;
+  color: #00fff9;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.style-cyberpunk .input-field::placeholder {
+  color: rgba(0, 255, 249, 0.3);
+}
+
+.style-cyberpunk .input-field:focus {
+  border-color: #ff00ff;
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+/* ===== Chat ===== */
+.style-cyberpunk .chat-message.user {
+  background: rgba(255, 0, 255, 0.15);
+  border: 1px solid rgba(255, 0, 255, 0.3);
+  border-radius: 0;
+  color: #ff99ff;
+}
+
+.style-cyberpunk .chat-message.assistant {
+  background: rgba(0, 255, 249, 0.08);
+  border: 1px solid rgba(0, 255, 249, 0.25);
+  border-radius: 0;
+  color: #ccc;
+}
+
+.style-cyberpunk .chat-message .citation-link {
+  background: rgba(0, 255, 249, 0.15);
+  color: #00fff9;
+  border: 1px solid rgba(0, 255, 249, 0.3);
+  border-radius: 0;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.6rem;
+}
+
+/* ===== Pipeline ===== */
+.style-cyberpunk .pipeline-node {
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid rgba(0, 255, 249, 0.25);
+  border-radius: 0;
+}
+
+.style-cyberpunk .pipeline-node .node-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  color: #00fff9;
+}
+
+.style-cyberpunk .pipeline-node.active {
+  border-color: #ff00ff;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+  background: rgba(255, 0, 255, 0.1);
+}
+
+.style-cyberpunk .pipeline-node.completed {
+  border-color: #00fff9;
+  box-shadow: 0 0 15px rgba(0, 255, 249, 0.3);
+}
+
+.style-cyberpunk .pipeline-connector {
+  background: rgba(0, 255, 249, 0.2);
+}
+
+.style-cyberpunk .pipeline-connector.active::after {
+  background: #ff00ff;
+  box-shadow: 0 0 5px #ff00ff;
+}
+
+.style-cyberpunk .pipeline-output {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid #00fff9;
+  border-radius: 0;
+  color: #00fff9;
+  font-size: 0.8rem;
+}
+
+/* ===== Deliverables ===== */
+.style-cyberpunk .deliverable-card {
+  background: rgba(20, 20, 40, 0.9);
+  border: 1px solid rgba(0, 255, 249, 0.25);
+  border-radius: 0;
+}
+
+.style-cyberpunk .deliverable-card h3 {
+  font-family: 'Orbitron', monospace;
+  color: #ff00ff;
+}
+
+.style-cyberpunk .deliverable-preview .preview-content {
+  background: rgba(10, 10, 20, 0.98);
+  border: 1px solid #00fff9;
+  border-radius: 0;
+  box-shadow: 0 0 30px rgba(0, 255, 249, 0.2);
+  color: #ccc;
+}
+
+.style-cyberpunk .deliverable-preview .preview-content .close-btn {
+  color: #ff00ff;
+}
+
+/* ===== Toast ===== */
+.style-cyberpunk .toast {
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid #00fff9;
+  border-radius: 0;
+  color: #00fff9;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+/* ===== Typography ===== */
+.style-cyberpunk h1, .style-cyberpunk h2, .style-cyberpunk h3 {
+  font-family: 'Orbitron', monospace;
+  color: #00fff9;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.style-cyberpunk h1 { font-size: 1.8rem; text-shadow: 0 0 15px rgba(0,255,249,0.3); }
+.style-cyberpunk h2 { font-size: 1.4rem; }
+.style-cyberpunk h3 { font-size: 1.1rem; }
+
+.style-cyberpunk p, .style-cyberpunk .subtitle {
+  color: #b0b0b0;
+}
+
+/* ===== Glitch Effect ===== */
+.style-cyberpunk .glitch {
+  position: relative;
+  animation: glitch-skew 4s infinite linear alternate-reverse;
+}
+
+.style-cyberpunk .glitch::before,
+.style-cyberpunk .glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+}
+
+.style-cyberpunk .glitch::before {
+  color: #ff00ff;
+  animation: glitch-effect 3s infinite linear alternate-reverse;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+
+.style-cyberpunk .glitch::after {
+  color: #00fff9;
+  animation: glitch-effect 2s infinite linear alternate-reverse;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+
+@keyframes glitch-effect {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, -2px); }
+  80% { transform: translate(1px, 1px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes glitch-skew {
+  0% { transform: skew(0deg); }
+  10% { transform: skew(0.5deg); }
+  20% { transform: skew(-0.3deg); }
+  30% { transform: skew(0deg); }
+  100% { transform: skew(0deg); }
+}
+
+/* Glitch on hover for cards */
+.style-cyberpunk .knowledge-card:hover {
+  animation: glitch-skew 0.3s infinite;
+}
+
+/* CRT flicker */
+.style-cyberpunk .logo {
+  animation: crt-flicker 5s infinite;
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  3% { opacity: 0.8; }
+  4% { opacity: 1; }
+  47% { opacity: 1; }
+  48% { opacity: 0.7; }
+  49% { opacity: 1; }
+  80% { opacity: 1; }
+  81% { opacity: 0.9; }
+  82% { opacity: 1; }
+}
+
+/* ===== Decorative neon lines ===== */
+.style-cyberpunk .content-area {
+  position: relative;
+}
+
+.style-cyberpunk .content-area::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00fff9, #ff00ff, transparent);
+  opacity: 0.5;
+  z-index: 1;
+}

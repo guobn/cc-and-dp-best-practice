@@ -1,0 +1,296 @@
+/**
+ * styles/neumorphism.css — Neumorphism（新拟物 / Soft UI）
+ * 关键视觉特征：软阴影 + 高光 + 单色背景，元素像从背景里"挤压"出来
+ */
+
+/* ===== 背景 ===== */
+.style-neumorphism body {
+  background: #e0e5ec;
+  color: #333;
+}
+
+.style-neumorphism #app {
+  background: #e0e5ec;
+}
+
+/* ===== Header ===== */
+.style-neumorphism .app-header {
+  background: #e0e5ec;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.style-neumorphism .logo {
+  color: #333;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* ===== Style Switcher ===== */
+.style-neumorphism .style-btn {
+  background: #e0e5ec !important;
+  border-radius: 12px !important;
+  box-shadow: 4px 4px 8px #b8bcc3, -4px -4px 8px #ffffff !important;
+  border: none !important;
+  color: #555 !important;
+}
+
+.style-neumorphism .style-btn.active {
+  box-shadow: inset 3px 3px 6px #b8bcc3, inset -3px -3px 6px #ffffff !important;
+}
+
+.style-neumorphism .style-btn:hover {
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff !important;
+}
+
+/* ===== Sidebar ===== */
+.style-neumorphism .ai-sidebar {
+  background: #e0e5ec;
+  border-right: none;
+  box-shadow: inset -2px 0 5px rgba(0,0,0,0.03);
+}
+
+.style-neumorphism .ai-sidebar-title {
+  color: #333;
+  border-bottom: none;
+  font-weight: 500;
+}
+
+.style-neumorphism .ai-sidebar-item {
+  background: #e0e5ec;
+  border-radius: 15px;
+  border: none;
+  box-shadow: inset 3px 3px 6px #b8bcc3, inset -3px -3px 6px #ffffff;
+  color: #444;
+}
+
+/* ===== Module Tabs ===== */
+.style-neumorphism .module-tabs {
+  border-bottom: none;
+  gap: 8px;
+  padding: 16px 24px 0;
+}
+
+.style-neumorphism .tab-btn {
+  border-radius: 12px;
+  border: none;
+  background: #e0e5ec;
+  color: #666;
+  font-weight: 400;
+  box-shadow: 3px 3px 6px #b8bcc3, -3px -3px 6px #ffffff;
+  padding: 10px 20px;
+}
+
+.style-neumorphism .tab-btn.active {
+  box-shadow: inset 3px 3px 6px #b8bcc3, inset -3px -3px 6px #ffffff;
+  color: #333;
+  font-weight: 500;
+  border-bottom: none;
+}
+
+.style-neumorphism .tab-btn:hover {
+  box-shadow: 4px 4px 8px #b8bcc3, -4px -4px 8px #ffffff;
+}
+
+/* ===== Cards ===== */
+.style-neumorphism .card {
+  background: #e0e5ec;
+  border-radius: 15px;
+  border: none;
+  box-shadow: 9px 9px 16px #b8bcc3, -9px -9px 16px #ffffff;
+  padding: 24px;
+}
+
+.style-neumorphism .card-title {
+  color: #333;
+  font-weight: 500;
+}
+
+/* ===== Knowledge Cards ===== */
+.style-neumorphism .knowledge-card {
+  background: #e0e5ec;
+  border-radius: 15px;
+  border: none;
+  box-shadow: 7px 7px 14px #b8bcc3, -7px -7px 14px #ffffff;
+  padding: 20px;
+}
+
+.style-neumorphism .tag {
+  background: #e0e5ec;
+  color: #555;
+  border-radius: 8px;
+  box-shadow: inset 2px 2px 4px #b8bcc3, inset -2px -2px 4px #ffffff;
+  border: none;
+  font-weight: 400;
+}
+
+/* ===== Buttons ===== */
+.style-neumorphism .btn {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff;
+  color: #444;
+  font-weight: 400;
+  padding: 10px 24px;
+}
+
+.style-neumorphism .btn:hover {
+  box-shadow: 6px 6px 12px #b8bcc3, -6px -6px 12px #ffffff;
+}
+
+.style-neumorphism .btn:active {
+  box-shadow: inset 4px 4px 8px #b8bcc3, inset -4px -4px 8px #ffffff;
+}
+
+.style-neumorphism .btn-primary {
+  background: #667eea;
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff;
+  color: #fff;
+}
+
+.style-neumorphism .btn-primary:active {
+  box-shadow: inset 4px 4px 8px #4a5fc7, inset -4px -4px 8px #8299ff;
+}
+
+/* ===== Inputs ===== */
+.style-neumorphism .input-field {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 12px;
+  box-shadow: inset 4px 4px 8px #b8bcc3, inset -4px -4px 8px #ffffff;
+  color: #444;
+  padding: 12px 18px;
+}
+
+.style-neumorphism .input-field::placeholder {
+  color: #aaa;
+}
+
+.style-neumorphism .input-field:focus {
+  box-shadow: inset 5px 5px 10px #b8bcc3, inset -5px -5px 10px #ffffff;
+}
+
+/* ===== Chat ===== */
+.style-neumorphism .chat-message.user {
+  background: #667eea;
+  border: none;
+  border-radius: 15px 15px 4px 15px;
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff;
+  color: #fff;
+}
+
+.style-neumorphism .chat-message.assistant {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 15px 15px 15px 4px;
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff;
+  color: #333;
+}
+
+.style-neumorphism .chat-message .citation-link {
+  background: #e0e5ec;
+  box-shadow: inset 2px 2px 4px #b8bcc3, inset -2px -2px 4px #ffffff;
+  color: #667eea;
+  border-radius: 6px;
+}
+
+/* ===== Pipeline ===== */
+.style-neumorphism .pipeline-node {
+  background: #e0e5ec;
+  border-radius: 15px;
+  border: none;
+  box-shadow: 7px 7px 14px #b8bcc3, -7px -7px 14px #ffffff;
+}
+
+.style-neumorphism .pipeline-node.active {
+  box-shadow: inset 5px 5px 10px #b8bcc3, inset -5px -5px 10px #ffffff;
+  background: #d5dae0;
+}
+
+.style-neumorphism .pipeline-node.completed {
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff;
+}
+
+.style-neumorphism .pipeline-node.completed .node-icon {
+  color: #51cf66;
+}
+
+.style-neumorphism .pipeline-connector {
+  background: #c8cdd3;
+  height: 4px;
+  border-radius: 2px;
+  box-shadow: inset 1px 1px 2px #b8bcc3;
+}
+
+.style-neumorphism .pipeline-connector.active::after {
+  background: #667eea;
+  border-radius: 2px;
+}
+
+.style-neumorphism .pipeline-output {
+  background: #e0e5ec;
+  border-radius: 15px;
+  border: none;
+  box-shadow: inset 5px 5px 10px #b8bcc3, inset -5px -5px 10px #ffffff;
+  color: #444;
+  font-family: 'Courier New', monospace;
+}
+
+/* ===== Deliverables ===== */
+.style-neumorphism .deliverable-card {
+  background: #e0e5ec;
+  border-radius: 15px;
+  border: none;
+  box-shadow: 9px 9px 16px #b8bcc3, -9px -9px 16px #ffffff;
+}
+
+.style-neumorphism .deliverable-preview .preview-content {
+  background: #e0e5ec;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 12px 12px 24px #b8bcc3, -12px -12px 24px #ffffff;
+  color: #333;
+}
+
+/* ===== Toast ===== */
+.style-neumorphism .toast {
+  background: #e0e5ec;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 5px 5px 10px #b8bcc3, -5px -5px 10px #ffffff;
+  border: none;
+}
+
+/* ===== Typography ===== */
+.style-neumorphism h1, .style-neumorphism h2, .style-neumorphism h3 {
+  color: #333;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.style-neumorphism h2 {
+  border-left: none;
+}
+
+.style-neumorphism p, .style-neumorphism .subtitle {
+  color: #555;
+  font-weight: 300;
+}
+
+/* ===== Extra Neumorphism touches ===== */
+.style-neumorphism .knowledge-grid {
+  gap: 20px;
+}
+
+/* Subtle background texture */
+.style-neumorphism body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.2) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}

@@ -1,0 +1,330 @@
+/**
+ * styles/brutal.css — Neo-Brutalism（新粗野主义）
+ * 关键视觉特征：厚黑边框、纯色块、错位阴影、粗壮无衬线字体
+ */
+
+/* ===== 背景 ===== */
+.style-brutal body {
+  background: #fffbe6;
+  color: #1a1a1a;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', 'Bebas Neue', sans-serif;
+}
+
+/* ===== Header ===== */
+.style-brutal .app-header {
+  background: #ffd700;
+  border-bottom: 5px solid #000;
+  box-shadow: 0 5px 0 #ff6b6b;
+}
+
+.style-brutal .logo {
+  font-size: 1.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #000;
+  -webkit-text-stroke: 1px #000;
+}
+
+/* ===== Style Switcher ===== */
+.style-brutal .style-btn {
+  border: 3px solid #000 !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 3px 0 #000 !important;
+}
+
+.style-brutal .style-btn.active {
+  box-shadow: 5px 5px 0 #000 !important;
+  transform: translate(-2px, -2px);
+}
+
+/* ===== Sidebar ===== */
+.style-brutal .ai-sidebar {
+  background: #fff;
+  border-right: 5px solid #000;
+}
+
+.style-brutal .ai-sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 4px solid #000;
+  padding-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.style-brutal .ai-sidebar-item {
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 #000;
+}
+
+/* ===== Module Tabs ===== */
+.style-brutal .module-tabs {
+  border-bottom: 5px solid #000;
+  padding-bottom: 0;
+}
+
+.style-brutal .tab-btn {
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #333;
+  border-bottom: 5px solid transparent;
+  padding: 12px 24px;
+}
+
+.style-brutal .tab-btn.active {
+  color: #000;
+  border-bottom-color: #000;
+  background: #ffd700;
+}
+
+.style-brutal .tab-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+/* ===== Cards ===== */
+.style-brutal .card {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #000;
+  padding: 20px;
+}
+
+.style-brutal .card-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Knowledge Cards ===== */
+.style-brutal .knowledge-card {
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 #000;
+  background: #fff;
+}
+
+.style-brutal .knowledge-card:nth-child(3n+1) {
+  background: #ffd700;
+}
+
+.style-brutal .knowledge-card:nth-child(3n+2) {
+  background: #ff6b6b;
+  color: #fff;
+}
+
+.style-brutal .knowledge-card:nth-child(3n+3) {
+  background: #51cf66;
+}
+
+.style-brutal .tag {
+  background: #000;
+  color: #fff;
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+}
+
+/* ===== Buttons ===== */
+.style-brutal .btn {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 5px 5px 0 #000;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+  padding: 10px 24px;
+  color: #000;
+}
+
+.style-brutal .btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 7px 7px 0 #000;
+}
+
+.style-brutal .btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 #000;
+}
+
+.style-brutal .btn-primary {
+  background: #ffd700;
+  color: #000;
+}
+
+.style-brutal .btn-primary:hover {
+  background: #ffed4a;
+}
+
+/* ===== Inputs ===== */
+.style-brutal .input-field {
+  border: 4px solid #000;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-weight: 700;
+  padding: 12px 16px;
+}
+
+.style-brutal .input-field::placeholder {
+  color: #999;
+  font-weight: 400;
+}
+
+.style-brutal .input-field:focus {
+  box-shadow: 4px 4px 0 #000;
+  outline: none;
+}
+
+/* ===== Chat ===== */
+.style-brutal .chat-message.user {
+  background: #ffd700;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 5px 5px 0 #000;
+  color: #000;
+  font-weight: 700;
+}
+
+.style-brutal .chat-message.assistant {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 5px 5px 0 #000;
+}
+
+.style-brutal .chat-message .citation-link {
+  background: #000;
+  color: #fff;
+  border-radius: 0;
+  padding: 2px 6px;
+  font-weight: 700;
+}
+
+/* ===== Pipeline ===== */
+.style-brutal .pipeline-node {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 #000;
+}
+
+.style-brutal .pipeline-node .node-name {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.style-brutal .pipeline-node.active {
+  background: #ffd700;
+  box-shadow: 8px 8px 0 #000;
+  transform: translate(-2px, -2px);
+}
+
+.style-brutal .pipeline-node.completed {
+  background: #51cf66;
+}
+
+.style-brutal .pipeline-connector {
+  height: 5px;
+  background: #000;
+  border-radius: 0;
+}
+
+.style-brutal .pipeline-connector.active::after {
+  background: #ffd700;
+}
+
+.style-brutal .pipeline-output {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 5px 5px 0 #000;
+  color: #000;
+}
+
+/* ===== Deliverables ===== */
+.style-brutal .deliverable-card {
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #000;
+}
+
+.style-brutal .deliverable-card:nth-child(1) { background: #ffd700; }
+.style-brutal .deliverable-card:nth-child(2) { background: #ff6b6b; color: #fff; }
+.style-brutal .deliverable-card:nth-child(3) { background: #51cf66; }
+
+.style-brutal .deliverable-preview .preview-content {
+  background: #fffbe6;
+  border: 6px solid #000;
+  border-radius: 0;
+  box-shadow: 12px 12px 0 #000;
+}
+
+/* ===== Toast ===== */
+.style-brutal .toast {
+  background: #000;
+  color: #ffd700;
+  border-radius: 0;
+  border: 3px solid #ffd700;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ===== Typography ===== */
+.style-brutal h1, .style-brutal h2, .style-brutal h3 {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #000;
+}
+
+.style-brutal h1 { font-size: 2.2rem; border-left: 8px solid #000; padding-left: 16px; }
+.style-brutal h2 { font-size: 1.8rem; }
+.style-brutal h3 { font-size: 1.4rem; }
+
+.style-brutal p, .style-brutal .subtitle {
+  font-weight: 500;
+}
+
+/* ===== Extra Brutal Touches ===== */
+.style-brutal .module-section h2 {
+  border-bottom: 5px solid #000;
+  padding-bottom: 8px;
+  display: inline-block;
+}
+
+/* Color block accents */
+.style-brutal .pipeline-controls {
+  border-top: 4px dashed #000;
+  padding-top: 20px;
+}
+
+/* Staggered color blocks for visual interest */
+.style-brutal .pipeline-container {
+  position: relative;
+}
+
+.style-brutal .pipeline-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: #ff6b6b;
+  border: 4px solid #000;
+  z-index: 0;
+}

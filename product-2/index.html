@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 工作站 - DeepSeek Agent Pro</title>
+  <meta name="description" content="AI 工作站 Demo - 智能采集、RAG 对话、Agent 流水线、成果产出四大模块" />
+
+  <!-- ====== Tailwind CSS (CDN) ====== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            gray: { 950: '#030712' },
+            indigo: { 950: '#1e1b4b' }
+          },
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace']
+          },
+          animation: {
+            'shimmer': 'shimmer 3s linear infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+            'gradient-shift': 'gradient-shift 8s ease infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- ====== Custom Styles ====== -->
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- ====== Babel Standalone (for JSX compilation) ====== -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- ====== Import Map - Resolves bare specifiers for ESM ====== -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom": "https://esm.sh/react-dom@18.2.0",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "framer-motion": "https://esm.sh/framer-motion@11.0.0",
+      "lucide-react": "https://esm.sh/lucide-react@0.344.0",
+      "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+      "@/lib/store": "./lib/store.js",
+      "@/lib/typewriter": "./lib/typewriter.js",
+      "@/lib/markdown": "./lib/markdown.js",
+      "@/data/knowledge": "./data/knowledge.js",
+      "@/data/chat": "./data/chat.js",
+      "@/data/agents": "./data/agents.js",
+      "@/data/outputs": "./data/outputs.js"
+    }
+  }
+  </script>
+  <style>
+    /* 防止 FOUC */
+    body { background: #030712; }
+  </style>
+</head>
+<body class="dark">
+  <!-- ====== App Root ====== -->
+  <div id="root"></div>
+
+  <!-- ====== Main Application Script (Babel-compiled JSX) ====== -->
+  <script type="text/babel" data-type="module">
+    // ========================================================================
+    // IMPORTS - CDN packages via importmap
+    // ========================================================================
+    import React, { useState, useEffect, useRef, useCallback, useMemo, useReducer, createContext, useContext } from 'react';
+    import ReactDOM from 'react-dom/client';
+    import { motion, AnimatePresence } from 'framer-motion';
+    import * as Lucide from 'lucide-react';
+
+    // Local lib/data modules via importmap
+    import { AppProvider, useApp, appReducer, initialState, ActionTypes } from '@/lib/store';
+    import { renderMarkdown } from '@/lib/markdown';
+    import { createTypewriter, runTypewriter } from '@/lib/typewriter';
+    import { knowledgeCards, searchKnowledge } from '@/data/knowledge';
+    import { chatHistory, suggestedQuestions, getSimulatedResponse, defaultResponse } from '@/data/chat';
+    import { pipelineConfig, nodeDurations, getSimulationOutput, simulationOutputs } from '@/data/agents';
+    import { deliverables as deliverableData, getAllDeliverables, getDeliverablesByType, outputTypeConfig } from '@/data/outputs';
+
+    // Lucide icon destructuring
+    const {
+      Brain, Sparkles, MessageSquare, GitBranch, FileText, PanelRightOpen, Sun, Moon, Github, Zap,
+      Globe, Search, Tag, Clock, Link, CheckCircle, Loader2, Plus, Bookmark, ExternalLink, Trash2,
+      Filter, BrainCircuit, Send, Bot, User, Quote, BookOpen, Clipboard, Check, Lightbulb,
+      Play, Square, RotateCcw, FileSearch, PenLine, ClipboardCheck, ArrowRight, CheckCircle2,
+      AlertCircle, Terminal, GripVertical, ChevronDown, ChevronUp, Maximize2, Copy, Download, Eye,
+      Edit3, Archive, Newspaper, Calendar, X, Cpu, Activity, ChevronRight, Hope, PanelRightClose,
+      Settings, Menu, Info, AlertTriangle, Wifi, WifiOff, Layers, Target, BookmarkCheck
+    } = Lucide;
+
+    // ========================================================================
+    // DATA - Pre-populate store with knowledge cards
+    // ========================================================================
+    // (Data is loaded via importmap from data/knowledge.js, etc.)
+
+    // ========================================================================
+    // UI COMPONENTS - shadcn/ui style
+    // ========================================================================
+
+    // -------- Button --------
+    const btnVariants = {
+      default: 'bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700 focus-visible:ring-indigo-500',
+      destructive: 'bg-red-600 text-white hover:bg-red-500 active:bg-red-700 focus-visible:ring-red-500',
+      outline: 'border border-gray-600 bg-transparent text-gray-200 hover:bg-gray-800 active:bg-gray-700 focus-visible:ring-gray-500',
+      secondary: 'bg-gray-700 text-gray-200 hover:bg-gray-600 active:bg-gray-800 focus-visible:ring-gray-500',
+      ghost: 'text-gray-300 hover:bg-gray-800 hover:text-white active:bg-gray-700 focus-visible:ring-gray-500',
+      link: 'text-indigo-400 underline-offset-4 hover:underline hover:text-indigo-300 focus-visible:ring-indigo-500'
+    };
+    const btnSizes = {
+      default: 'h-10 px-4 py-2 text-sm',
+      sm: 'h-8 px-3 py-1 text-xs',
+      lg: 'h-12 px-6 py-3 text-base',
+      icon: 'h-10 w-10 p-2'
+    };
+
+    function Button({ children, variant = 'default', size = 'default', className = '', disabled = false, loading = false, onClick, type = 'button', ariaLabel, ...props }) {
+      return React.createElement('button', {
+        type,
+        className: `inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 disabled:pointer-events-none disabled:opacity-50 select-none ${btnVariants[variant] || btnVariants.default} ${btnSizes[size] || btnSizes.default} ${className}`,
+        disabled: disabled || loading,
+        onClick,
+        'aria-label': ariaLabel,
+        ...props
+      },
+        loading && React.createElement('span', {
+          className: 'mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white inline-block'
+        }),
+        children
+      );
+    }
+
+    // -------- Switch --------
+    function Switch({ checked = false, onCheckedChange, disabled = false, ariaLabel = '切换开关', size = 'default', className = '' }) {
+      const sizes = {
+        default: { w: 'w-11', h: 'h-6', thumb: 'h-5 w-5' },
+        sm: { w: 'w-9', h: 'h-5', thumb: 'h-4 w-4' }
+      };
+      const s = sizes[size] || sizes.default;
+      const handleClick = () => { if (!disabled) onCheckedChange?.(!checked); };
+      const handleKeyDown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } };
+
+      return React.createElement('button', {
+        role: 'switch',
+        'aria-checked': checked,
+        'aria-label': ariaLabel,
+        disabled,
+        onClick: handleClick,
+        onKeyDown: handleKeyDown,
+        className: `relative inline-flex shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 ${checked ? 'bg-indigo-600' : 'bg-gray-700'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${s.w} ${s.h} ${className}`
+      },
+        React.createElement(motion.span, {
+          className: `block rounded-full bg-white shadow-sm ${s.thumb}`,
+          animate: checked ? { x: size === 'sm' ? 16 : 20 } : { x: 2 },
+          transition: { type: 'spring', stiffness: 500, damping: 30 }
+        })
+      );
+    }
+
+    // -------- Tooltip --------
+    function Tooltip({ children, content, side = 'top', delay = 400, className = '' }) {
+      const [visible, setVisible] = useState(false);
+      const timeoutRef = useRef(null);
+      const show = useCallback(() => { clearTimeout(timeoutRef.current); timeoutRef.current = setTimeout(() => setVisible(true), delay); }, [delay]);
+      const hide = useCallback(() => { clearTimeout(timeoutRef.current); setVisible(false); }, []);
+
+      const sideClasses = {
+        top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
+        bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
+        left: 'right-full top-1/2 -translate-y-1/2 mr-2',
+        right: 'left-full top-1/2 -translate-y-1/2 ml-2'
+      };
+      const arrowClasses = {
+        top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-800',
+        bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-800',
+        left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-800',
+        right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-800'
+      };
+
+      useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+      return React.createElement('div', { className: `relative inline-flex ${className}`, onMouseEnter: show, onMouseLeave: hide, onFocus: show, onBlur: hide },
+        children,
+        React.createElement(AnimatePresence, null,
+          visible && React.createElement(motion.div, {
+            className: `absolute z-50 ${sideClasses[side] || sideClasses.top} pointer-events-none`,
+            initial: { opacity: 0, scale: 0.9 },
+            animate: { opacity: 1, scale: 1 },
+            exit: { opacity: 0, scale: 0.9 },
+            transition: { duration: 0.15 }
+          },
+            React.createElement('div', { className: 'relative' },
+              React.createElement('div', { className: 'bg-gray-800 text-gray-100 text-xs font-medium px-3 py-1.5 rounded-lg shadow-xl whitespace-nowrap border border-gray-700' }, content),
+              React.createElement('div', { className: `absolute w-0 h-0 border-4 ${arrowClasses[side] || arrowClasses.top}` })
+            )
+          )
+        )
+      );
+    }
+
+    // -------- Card components --------
+    function Card({ children, className = '', glow = false, glowColor = 'indigo', ...props }) {
+      const glowMap = { indigo: 'shadow-indigo-500/10', purple: 'shadow-purple-500/10', emerald: 'shadow-emerald-500/10', pink: 'shadow-pink-500/10' };
+      const cls = `rounded-xl border border-gray-800 bg-gray-900/80 backdrop-blur-sm shadow-lg transition-all duration-300 hover:border-gray-700 ${glow ? `shadow-lg ${glowMap[glowColor] || glowMap.indigo}` : ''} ${className}`;
+      return React.createElement('div', { className: cls, ...props }, children);
+    }
+    function CardHeader({ children, className = '' }) {
+      return React.createElement('div', { className: `flex flex-col space-y-1.5 p-6 pb-0 ${className}` }, children);
+    }
+    function CardTitle({ children, className = '' }) {
+      return React.createElement('h3', { className: `text-lg font-semibold leading-none tracking-tight text-white ${className}` }, children);
+    }
+    function CardDescription({ children, className = '' }) {
+      return React.createElement('p', { className: `text-sm text-gray-400 ${className}` }, children);
+    }
+    function CardContent({ children, className = '' }) {
+      return React.createElement('div', { className: `p-6 pt-4 ${className}` }, children);
+    }
+    function CardFooter({ children, className = '' }) {
+      return React.createElement('div', { className: `flex items-center p-6 pt-0 ${className}` }, children);
+    }
+
+    // -------- Dialog --------
+    function Dialog({ open = false, onClose, children, title = '', className = '', size = 'md' }) {
+      const overlayRef = useRef(null);
+      const sizeMap = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl', full: 'max-w-full mx-4' };
+      const handleKeyDown = useCallback((e) => { if (e.key === 'Escape') onClose?.(); }, [onClose]);
+      const handleOverlay = (e) => { if (e.target === overlayRef.current) onClose?.(); };
+
+      useEffect(() => {
+        if (open) { document.addEventListener('keydown', handleKeyDown); document.body.style.overflow = 'hidden'; }
+        return () => { document.removeEventListener('keydown', handleKeyDown); document.body.style.overflow = ''; };
+      }, [open, handleKeyDown]);
+
+      return React.createElement(AnimatePresence, null,
+        open && React.createElement(motion.div, {
+          key: 'dialog',
+          ref: overlayRef,
+          className: 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm',
+          initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.2 },
+          onClick: handleOverlay
+        },
+          React.createElement(motion.div, {
+            role: 'dialog', 'aria-modal': 'true', 'aria-label': title,
+            className: `relative w-full ${sizeMap[size] || sizeMap.md} bg-gray-900 border border-gray-700 rounded-xl shadow-2xl shadow-black/50 mx-4 max-h-[85vh] flex flex-col`,
+            initial: { opacity: 0, scale: 0.95, y: 20 },
+            animate: { opacity: 1, scale: 1, y: 0 },
+            exit: { opacity: 0, scale: 0.95, y: 20 },
+            transition: { type: 'spring', damping: 25, stiffness: 300 }
+          },
+            title && React.createElement('div', { className: 'flex items-center justify-between px-6 py-4 border-b border-gray-800' },
+              React.createElement('h2', { className: 'text-lg font-semibold text-white' }, title),
+              React.createElement('button', {
+                onClick: onClose,
+                className: 'rounded-lg p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors',
+                'aria-label': '关闭对话框'
+              }, React.createElement(X, { size: 18 }))
+            ),
+            React.createElement('div', { className: `overflow-y-auto p-6 ${className}` }, children)
+          )
+        )
+      );
+    }
+
+    // -------- Tabs --------
+    function Tabs({ defaultValue, value, onValueChange, children, className = '' }) {
+      const [internalValue, setInternalValue] = useState(defaultValue || '');
+      const activeValue = value !== undefined ? value : internalValue;
+      const handleChange = useCallback((v) => { if (onValueChange) onValueChange(v); else setInternalValue(v); }, [onValueChange]);
+
+      const list = [], panels = [];
+      React.Children.forEach(children, child => {
+        if (!child) return;
+        if (child.type === TabsList) list.push(React.cloneElement(child, { activeValue, onChange: handleChange, key: 'tl' }));
+        else if (child.type === TabsContent) panels.push(React.cloneElement(child, { activeValue, key: child.props.value }));
+      });
+
+      return React.createElement('div', { className }, ...list, ...panels);
+    }
+
+    function TabsList({ children, activeValue, onChange, className = '' }) {
+      const items = React.Children.toArray(children);
+      const [activeIndex, setActiveIndex] = useState(0);
+      useEffect(() => { const idx = items.findIndex(c => c.props.value === activeValue); if (idx >= 0) setActiveIndex(idx); }, [activeValue, items]);
+      const handleKeyDown = (e) => {
+        let ni = activeIndex;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') ni = (activeIndex + 1) % items.length;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ni = (activeIndex - 1 + items.length) % items.length;
+        else return;
+        e.preventDefault();
+        const nv = items[ni]?.props?.value;
+        if (nv) onChange?.(nv);
+      };
+
+      return React.createElement('div', {
+        role: 'tablist', 'aria-orientation': 'horizontal',
+        className: `inline-flex items-center gap-1 bg-gray-800/80 rounded-xl p-1 border border-gray-700/50 ${className}`,
+        onKeyDown: handleKeyDown
+      },
+        items.map((child, idx) =>
+          React.cloneElement(child, {
+            key: child.props.value || idx,
+            active: child.props.value === activeValue,
+            onClick: () => onChange?.(child.props.value),
+            tabIndex: child.props.value === activeValue ? 0 : -1,
+            role: 'tab', 'aria-selected': child.props.value === activeValue
+          })
+        )
+      );
+    }
+
+    function TabsTrigger({ children, value, active, onClick, className = '', ...props }) {
+      return React.createElement('button', {
+        className: `relative inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${active ? 'text-white' : 'text-gray-400 hover:text-gray-200'} ${className}`,
+        onClick, ...props
+      },
+        active && React.createElement(motion.span, {
+          layoutId: 'active-tab-uid',
+          className: 'absolute inset-0 rounded-lg bg-gray-700',
+          transition: { type: 'spring', stiffness: 380, damping: 30 }
+        }),
+        React.createElement('span', { className: 'relative z-10' }, children)
+      );
+    }
+
+    function TabsContent({ children, value, activeValue, className = '' }) {
+      if (value !== activeValue) return null;
+      return React.createElement(motion.div, {
+        role: 'tabpanel', className,
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.2 }
+      }, children);
+    }
+
+    // ========================================================================
+    // EFFECTS - Magic UI / Aceternity UI style
+    // ========================================================================
+
+    // -------- Spotlight --------
+    function Spotlight({ children, className = '', size = 400, color = 'indigo', opacity = 0.15 }) {
+      const ref = useRef(null);
+      const [pos, setPos] = useState({ x: 0, y: 0 });
+      const [vis, setVis] = useState(false);
+      const target = useRef({ x: 0, y: 0 });
+      const colors = { indigo: '99,102,241', purple: '139,92,246', emerald: '16,185,129', pink: '236,72,153' };
+      const rgb = colors[color] || colors.indigo;
+
+      const onMove = useCallback((e) => {
+        if (!ref.current) return; const r = ref.current.getBoundingClientRect();
+        target.current = { x: e.clientX - r.left, y: e.clientY - r.top }; setVis(true);
+      }, []);
+      const onLeave = useCallback(() => setVis(false), []);
+
+      useEffect(() => {
+        let raf;
+        function anim() { setPos(p => ({ x: p.x + (target.current.x - p.x) * 0.08, y: p.y + (target.current.y - p.y) * 0.08 })); raf = requestAnimationFrame(anim); }
+        raf = requestAnimationFrame(anim);
+        return () => cancelAnimationFrame(raf);
+      }, []);
+
+      return React.createElement('div', { ref, className: `relative overflow-hidden ${className}`, onMouseMove: onMove, onMouseLeave: onLeave },
+        React.createElement('div', { className: 'pointer-events-none absolute inset-0 transition-opacity duration-500', style: { opacity: vis ? opacity : 0, background: `radial-gradient(${size}px circle at ${pos.x}px ${pos.y}px, rgba(${rgb}, 0.15), transparent 60%)` } }),
+        React.createElement('div', { className: 'pointer-events-none absolute inset-0 transition-opacity duration-700', style: { opacity: vis ? opacity * 0.5 : 0, background: `radial-gradient(${size * 0.5}px circle at ${pos.x}px ${pos.y}px, rgba(${rgb}, 0.08), transparent 50%)` } }),
+        React.createElement('div', { className: 'relative z-10' }, children)
+      );
+    }
+
+    // -------- GlowCard --------
+    function GlowCard({ children, className = '', glowColor = 'indigo', glowIntensity = 'medium', noise = true }) {
+      const colors = { indigo: ['#6366f1', '#8b5cf6', '#a855f7'], purple: ['#8b5cf6', '#a855f7', '#d946ef'], emerald: ['#10b981', '#34d399', '#6ee7b7'], pink: ['#ec4899', '#f472b6', '#f9a8d4'] };
+      const c = colors[glowColor] || colors.indigo;
+      return React.createElement('div', { className: `relative group ${className}` },
+        React.createElement('div', { className: 'absolute -inset-2 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none', style: { background: `linear-gradient(135deg, ${c[0]}15, ${c[1]}15, ${c[2]}15)`, filter: 'blur(40px)' } }),
+        noise && React.createElement('div', { className: 'absolute inset-0 rounded-xl pointer-events-none opacity-[0.03] mix-blend-overlay', style: { backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E")`, backgroundRepeat: 'repeat', backgroundSize: '128px 128px' } }),
+        React.createElement('div', { className: 'relative z-10 rounded-xl bg-gray-900/90 backdrop-blur-sm border border-gray-800/80 h-full' }, children)
+      );
+    }
+
+    // -------- AnimatedBeam --------
+    function BeamParticle({ index, from, to, duration = 3 }) {
+      return React.createElement(motion.div, {
+        className: 'absolute rounded-full',
+        style: {
+          background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.8), transparent)',
+          filter: 'blur(1px)',
+          width: (Math.random() * 4 + 2) + 'px',
+          height: (Math.random() * 4 + 2) + 'px'
+        },
+        initial: { x: from.x, y: from.y, opacity: 0 },
+        animate: { x: [from.x, (from.x + to.x) / 2, to.x], y: [from.y, (from.y + to.y) / 2 - 20, to.y], opacity: [0, 1, 0] },
+        transition: { duration, delay: index * 0.3, repeat: Infinity, ease: 'easeInOut' }
+      });
+    }
+
+    function AnimatedBeam({ children, className = '', beamCount = 5, duration = 3 }) {
+      const ref = useRef(null);
+      const [dims, setDims] = useState({ w: 0, h: 0 });
+      useEffect(() => {
+        if (!ref.current) return;
+        const r = ref.current.getBoundingClientRect();
+        setDims({ w: r.width, h: r.height });
+        const obs = new ResizeObserver((entries) => { for (const e of entries) { const { width, height } = e.contentRect; setDims({ w: width, h: height }); } });
+        obs.observe(ref.current);
+        return () => obs.disconnect();
+      }, []);
+
+      return React.createElement('div', { ref, className: `relative overflow-hidden ${className}`, style: { minHeight: '40px' } },
+        React.createElement('div', { className: 'absolute inset-0 pointer-events-none', style: { background: 'radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.15), transparent 70%)' } }),
+        dims.w > 0 && Array.from({ length: beamCount }, (_, i) =>
+          React.createElement(BeamParticle, { key: i, index: i, from: { x: 0, y: dims.h / 2 }, to: { x: dims.w, y: dims.h / 2 }, duration })
+        ),
+        React.createElement('div', { className: 'relative z-10' }, children)
+      );
+    }
+
+    // ========================================================================
+    // THINKING PANEL
+    // ========================================================================
+    function ThinkingPanel() {
+      const { state, actions } = useApp();
+      const { thinkingPanelOpen, thinkingData } = state;
+      const logsEndRef = useRef(null);
+      const [expSections, setExpSections] = useState({ prompt: false, logs: true, metrics: true });
+
+      useEffect(() => { logsEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [thinkingData.logs.length]);
+
+      const toggle = (s) => setExpSections(p => ({ ...p, [s]: !p[s] }));
+
+      const metrics = [
+        { icon: Cpu, label: '模型', value: thinkingData.model || 'deepseek-v4-pro[1m]', color: 'text-indigo-400' },
+        { icon: Zap, label: 'Tokens', value: `${(thinkingData.tokenCount || 0).toLocaleString()}`, color: 'text-emerald-400' },
+        { icon: Activity, label: '状态', value: thinkingData.status === 'thinking' ? '思考中...' : thinkingData.status === 'done' ? '完成' : '就绪', color: thinkingData.status === 'thinking' ? 'text-yellow-400' : thinkingData.status === 'done' ? 'text-emerald-400' : 'text-gray-400' },
+        { icon: Target, label: '温度', value: '0.7', color: 'text-purple-400' },
+        { icon: Clock, label: '延迟', value: thinkingData.status === 'thinking' ? '模拟中...' : '~2.3s', color: 'text-gray-400' }
+      ];
+
+      return React.createElement(AnimatePresence, null,
+        thinkingPanelOpen && React.createElement(motion.div, {
+          className: 'fixed right-0 top-0 h-full w-80 bg-gray-900/95 backdrop-blur-xl border-l border-gray-800 z-40 flex flex-col shadow-2xl shadow-black/30',
+          initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '100%' },
+          transition: { type: 'spring', damping: 25, stiffness: 200 }
+        },
+          React.createElement('div', { className: 'flex items-center justify-between px-4 py-3 border-b border-gray-800' },
+            React.createElement('div', { className: 'flex items-center gap-2' },
+              React.createElement(Brain, { size: 18, className: 'text-indigo-400' }),
+              React.createElement('span', { className: 'text-sm font-semibold text-white' }, 'AI 思考过程'),
+              React.createElement('span', { className: `inline-block w-2 h-2 rounded-full ${thinkingData.status === 'thinking' ? 'bg-yellow-400 animate-pulse' : thinkingData.status === 'done' ? 'bg-emerald-400' : 'bg-gray-500'}` })
+            ),
+            React.createElement('button', { onClick: () => actions.setThinkingPanel(false), className: 'rounded-lg p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors', 'aria-label': '关闭' }, React.createElement(X, { size: 16 }))
+          ),
+          React.createElement('div', { className: 'flex-1 overflow-y-auto' },
+            // Metrics
+            React.createElement('div', { className: 'border-b border-gray-800' },
+              React.createElement('button', { className: 'flex items-center justify-between w-full px-4 py-2.5 text-xs font-medium text-gray-400 hover:text-gray-200', onClick: () => toggle('metrics'), 'aria-label': '切换' },
+                React.createElement('span', null, '运行指标'),
+                React.createElement(ChevronRight, { size: 14, className: `transition-transform ${expSections.metrics ? 'rotate-90' : ''}` })
+              ),
+              expSections.metrics && React.createElement('div', { className: 'grid grid-cols-2 gap-2 px-4 pb-3' },
+                metrics.map((m, i) => React.createElement('div', { key: i, className: 'bg-gray-800/60 rounded-lg px-3 py-2' },
+                  React.createElement('div', { className: 'flex items-center gap-1.5 mb-1' },
+                    React.createElement(m.icon, { size: 12, className: m.color }),
+                    React.createElement('span', { className: 'text-[10px] text-gray-500' }, m.label)
+                  ),
+                  React.createElement('span', { className: `text-xs font-mono font-medium ${m.color}` }, m.value)
+                ))
+              )
+            ),
+            // Prompt
+            React.createElement('div', { className: 'border-b border-gray-800' },
+              React.createElement('button', { className: 'flex items-center justify-between w-full px-4 py-2.5 text-xs font-medium text-gray-400 hover:text-gray-200', onClick: () => toggle('prompt'), 'aria-label': '切换' },
+                React.createElement('span', null, '系统 Prompt'),
+                React.createElement(ChevronRight, { size: 14, className: `transition-transform ${expSections.prompt ? 'rotate-90' : ''}` })
+              ),
+              expSections.prompt && React.createElement('div', { className: 'px-4 pb-3' },
+                React.createElement('pre', { className: 'text-[11px] font-mono text-gray-300 bg-gray-800/60 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap leading-relaxed' },
+                  thinkingData.prompt || '你是一个 AI 助手。请根据知识库内容回答用户问题。'
+                )
+              )
+            ),
+            // Logs
+            React.createElement('div', null,
+              React.createElement('button', { className: 'flex items-center justify-between w-full px-4 py-2.5 text-xs font-medium text-gray-400 hover:text-gray-200', onClick: () => toggle('logs'), 'aria-label': '切换' },
+                React.createElement('span', null, '思考日志'),
+                React.createElement('div', { className: 'flex items-center gap-2' },
+                  React.createElement('span', { className: 'text-[10px] text-gray-500' }, `${thinkingData.logs.length} 条`),
+                  React.createElement(ChevronRight, { size: 14, className: `transition-transform ${expSections.logs ? 'rotate-90' : ''}` })
+                )
+              ),
+              expSections.logs && React.createElement('div', { className: 'divide-y divide-gray-800/50' },
+                thinkingData.logs.length === 0
+                  ? React.createElement('div', { className: 'px-4 py-8 text-center text-xs text-gray-500' }, '暂无思考日志')
+                  : thinkingData.logs.map((log, i) => React.createElement(motion.div, {
+                    key: i,
+                    className: 'flex gap-3 px-4 py-2.5 border-b border-gray-800/50 last:border-0',
+                    initial: { opacity: 0, x: -10 },
+                    animate: { opacity: 1, x: 0 },
+                    transition: { delay: i * 0.05 }
+                  },
+                    React.createElement('div', { className: 'flex-shrink-0 w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center' }, React.createElement(Bot, { size: 14, className: 'text-indigo-400' })),
+                    React.createElement('div', { className: 'flex-1 min-w-0' },
+                      React.createElement('div', { className: 'flex items-center gap-2 mb-1' },
+                        React.createElement('span', { className: 'text-xs font-medium text-indigo-400' }, log.action || '思考'),
+                        log.timestamp && React.createElement('span', { className: 'text-xs text-gray-500' }, new Date(log.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+                      ),
+                      React.createElement('p', { className: 'text-xs text-gray-300 leading-relaxed' }, log.content)
+                    )
+                  )),
+                React.createElement('div', { ref: logsEndRef })
+              )
+            )
+          ),
+          React.createElement('div', { className: 'px-4 py-2.5 border-t border-gray-800 bg-gray-900/80' },
+            React.createElement('div', { className: 'flex items-center justify-between text-[10px] text-gray-500' },
+              React.createElement('span', null, '推理引擎 v2.4.0'),
+              React.createElement('span', null, `思考深度: ${thinkingData.logs.length > 5 ? '深度' : '标准'}`)
+            )
+          )
+        )
+      );
+    }
+
+    // ========================================================================
+    // LAYOUT - Header + Sidebar + Main area
+    // ========================================================================
+    const modules = [
+      { id: 'capture', label: '智能采集', icon: Globe, description: 'URL/主题抓取与摘要' },
+      { id: 'chat', label: '知识对话', icon: MessageSquare, description: '基于知识库的 RAG 问答' },
+      { id: 'pipeline', label: '工作流编排', icon: GitBranch, description: 'Agent 流水线执行' },
+      { id: 'output', label: '成果产出', icon: FileText, description: '报告/推文/周报管理' }
+    ];
+
+    function ToastItem({ toast }) {
+      const { actions } = useApp();
+      const [vis, setVis] = useState(true);
+      useEffect(() => { const t = setTimeout(() => { setVis(false); setTimeout(() => actions.removeToast(toast.id), 300); }, toast.duration || 3000); return () => clearTimeout(t); }, []);
+      const styles = { success: 'bg-emerald-900/80 border-emerald-700 text-emerald-200', error: 'bg-red-900/80 border-red-700 text-red-200', info: 'bg-indigo-900/80 border-indigo-700 text-indigo-200', warning: 'bg-yellow-900/80 border-yellow-700 text-yellow-200' };
+      return React.createElement(motion.div, {
+        className: `px-4 py-3 rounded-xl border shadow-xl backdrop-blur-sm text-sm ${styles[toast.type] || styles.info}`,
+        initial: { opacity: 0, y: -20, scale: 0.9 },
+        animate: vis ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: -20, scale: 0.9 },
+        transition: { type: 'spring', damping: 20 }
+      }, toast.message);
+    }
+
+    function Layout({ children }) {
+      const { state, actions } = useApp();
+      const { activeModule, theme, toasts } = state;
+
+      const handleModuleChange = useCallback((id) => {
+        actions.setActiveModule(id);
+        actions.setThinkingData({ prompt: `切换到模块: ${modules.find(m => m.id === id)?.label || id}`, status: 'idle' });
+        actions.addToast({ type: 'info', message: `切换到 ${modules.find(m => m.id === id)?.label || ''}`, duration: 1500 });
+      }, [actions]);
+
+      const toggleThinking = useCallback(() => {
+        actions.setThinkingPanel(!state.thinkingPanelOpen);
+      }, [state.thinkingPanelOpen, actions]);
+
+      const toggleTheme = useCallback(() => {
+        actions.toggleTheme();
+        document.documentElement.classList.toggle('dark', theme === 'light');
+      }, [theme, actions]);
+
+      return React.createElement(Spotlight, { className: 'min-h-screen bg-gray-950 text-gray-100 flex flex-col', color: 'indigo', opacity: 0.06 },
+        // Toasts
+        React.createElement('div', { className: 'fixed top-4 right-4 z-50 flex flex-col gap-2 min-w-[280px]' },
+          React.createElement(AnimatePresence, null, toasts.map(t => React.createElement(ToastItem, { key: t.id, toast: t })))
+        ),
+        // Header
+        React.createElement('header', { className: 'h-14 border-b border-gray-800 bg-gray-900/80 backdrop-blur-xl flex items-center justify-between px-4 lg:px-6 z-30' },
+          React.createElement('div', { className: 'flex items-center gap-3' },
+            React.createElement('div', { className: 'w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center' }, React.createElement(Brain, { size: 18, className: 'text-white' })),
+            React.createElement('div', null,
+              React.createElement('h1', { className: 'text-sm font-bold text-white leading-tight' }, 'AI 工作站'),
+              React.createElement('p', { className: 'text-[10px] text-gray-500' }, 'DeepSeek Agent Pro')
+            )
+          ),
+          React.createElement('div', { className: 'flex items-center gap-3' },
+            React.createElement('div', { className: 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-800 border border-gray-700' },
+              React.createElement(Zap, { size: 12, className: 'text-yellow-400' }),
+              React.createElement('span', { className: 'text-[11px] text-gray-300 font-mono' }, 'deepseek-v4-pro[1m]')
+            ),
+            React.createElement(Tooltip, { content: theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式', side: 'bottom' },
+              React.createElement('div', { className: 'flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/50 border border-gray-700/50' },
+                React.createElement(Sun, { size: 14, className: theme === 'dark' ? 'text-gray-500' : 'text-yellow-400' }),
+                React.createElement(Switch, { checked: theme === 'dark', onCheckedChange: toggleTheme, size: 'sm', ariaLabel: '切换主题' }),
+                React.createElement(Moon, { size: 14, className: theme === 'dark' ? 'text-indigo-400' : 'text-gray-500' })
+              )
+            ),
+            React.createElement(Tooltip, { content: '打开 AI 思考面板', side: 'bottom' },
+              React.createElement('button', { onClick: toggleThinking, className: 'rounded-lg p-2 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors', 'aria-label': 'AI 思考面板' }, React.createElement(PanelRightOpen, { size: 18 }))
+            ),
+            React.createElement('a', { href: '#', className: 'hidden sm:flex rounded-lg p-2 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors', 'aria-label': 'GitHub' }, React.createElement(Github, { size: 18 }))
+          )
+        ),
+        // Body
+        React.createElement('div', { className: 'flex flex-1 overflow-hidden' },
+          // Sidebar
+          React.createElement('aside', { className: 'w-60 flex-shrink-0 border-r border-gray-800 bg-gray-900/50 backdrop-blur-sm flex flex-col overflow-y-auto', 'aria-label': '模块导航' },
+            React.createElement('nav', { className: 'flex-1 px-3 py-4 space-y-1' },
+              modules.map(mod => {
+                const isActive = mod.id === activeModule;
+                const Icon = mod.icon;
+                return React.createElement('button', {
+                  key: mod.id,
+                  onClick: () => handleModuleChange(mod.id),
+                  className: `w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group ${isActive ? 'text-white' : 'text-gray-400 hover:text-gray-200'}`,
+                  'aria-label': `${mod.label} - ${mod.description}`,
+                  'aria-current': isActive ? 'page' : undefined
+                },
+                  isActive && React.createElement(motion.span, {
+                    layoutId: 'sidebar-active',
+                    className: 'absolute inset-0 rounded-xl bg-indigo-600/20 border border-indigo-500/30',
+                    transition: { type: 'spring', stiffness: 380, damping: 30 }
+                  }),
+                  React.createElement('span', { className: `relative z-10 flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${isActive ? 'bg-indigo-600/30 text-indigo-400' : 'bg-gray-800 text-gray-500 group-hover:bg-gray-700'}` },
+                    React.createElement(Icon, { size: 16 })
+                  ),
+                  React.createElement('span', { className: 'relative z-10' }, mod.label)
+                );
+              })
+            ),
+            React.createElement('div', { className: 'px-4 py-3 border-t border-gray-800' },
+              React.createElement('div', { className: 'flex items-center gap-2 text-[10px] text-gray-600' },
+                React.createElement('div', { className: 'w-1.5 h-1.5 rounded-full bg-emerald-500' }),
+                React.createElement('span', null, '系统运行中'),
+                React.createElement('span', { className: 'ml-auto' }, 'v2.4.0')
+              )
+            )
+          ),
+          // Main content
+          React.createElement('main', { className: 'flex-1 overflow-y-auto p-4 lg:p-6 max-w-7xl mx-auto w-full', 'aria-label': '主内容区域' },
+            React.createElement(motion.div, {
+              key: activeModule,
+              className: 'mb-6',
+              initial: { opacity: 0, y: -10 },
+              animate: { opacity: 1, y: 0 },
+              transition: { duration: 0.2 }
+            },
+              React.createElement('h2', { className: 'text-xl font-bold text-white' }, modules.find(m => m.id === activeModule)?.label || ''),
+              React.createElement('p', { className: 'text-sm text-gray-400 mt-1' }, modules.find(m => m.id === activeModule)?.description || '')
+            ),
+            React.createElement(AnimatePresence, { mode: 'wait' },
+              React.createElement(motion.div, {
+                key: activeModule,
+                initial: { opacity: 0, x: 20 },
+                animate: { opacity: 1, x: 0 },
+                exit: { opacity: 0, x: -20 },
+                transition: { duration: 0.2 }
+              }, children)
+            )
+          )
+        )
+      );
+    }
+
+    // ========================================================================
+    // MODULE 1: CAPTURE MODULE - 智能采集
+    // ========================================================================
+    const TAG_COLORS = [
+      'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+      'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      'bg-purple-500/20 text-purple-300 border-purple-500/30',
+      'bg-pink-500/20 text-pink-300 border-pink-500/30',
+      'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+    ];
+
+    function TagBadge({ tag, index }) {
+      return React.createElement('span', { className: `inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${TAG_COLORS[index % TAG_COLORS.length]}` },
+        React.createElement(Tag, { size: 10 }), tag
+      );
+    }
+
+    function SourceBadge({ sourceType }) {
+      const styles = {
+        '学术论文': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+        '技术博客': 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+        '产品博客': 'bg-pink-500/20 text-pink-300 border-pink-500/30',
+        '技术报告': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+        '技术文档': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+        '白皮书': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+      };
+      return React.createElement('span', { className: `inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${styles[sourceType] || 'bg-gray-500/20 text-gray-300'}` },
+        React.createElement(FileText, { size: 10 }), sourceType
+      );
+    }
+
+    function CaptureModule() {
+      const { state, actions } = useApp();
+      const [inputType, setInputType] = useState('url');
+      const [inputValue, setInputValue] = useState('');
+      const [capturing, setCapturing] = useState(false);
+      const [captureStage, setCaptureStage] = useState(0);
+      const [cards, setCards] = useState(knowledgeCards);
+      const [filterText, setFilterText] = useState('');
+      const CAPTURE_STAGES = [
+        { label: '解析输入...', duration: 400 },
+        { label: '抓取网页内容...', duration: 600 },
+        { label: '提取关键信息...', duration: 500 },
+        { label: '生成摘要...', duration: 500 },
+        { label: '完成!', duration: 300 }
+      ];
+
+      const startCapture = useCallback(async (type, value) => {
+        setCapturing(true);
+        setCaptureStage(0);
+        actions.setThinkingPanel(true);
+        actions.setThinkingData({
+          prompt: `你是一个智能内容采集器。\n\n输入类型: ${type === 'url' ? 'URL' : '主题'}\n输入内容: ${value}\n\n任务:\n1. 解析输入内容\n2. 识别关键主题\n3. 生成结构化摘要`,
+          tokenCount: 128, status: 'thinking',
+          logs: [{ action: '初始化', content: `处理${type === 'url' ? 'URL' : '主题'}: ${value}`, timestamp: Date.now() }]
+        });
+
+        for (let i = 0; i < CAPTURE_STAGES.length; i++) {
+          await new Promise(r => setTimeout(r, CAPTURE_STAGES[i].duration));
+          setCaptureStage(i);
+          actions.setThinkingData({ tokenCount: 128 + (i + 1) * 200, logs: [{ action: CAPTURE_STAGES[i].label, content: `阶段 ${i + 1}/${CAPTURE_STAGES.length}`, timestamp: Date.now() }] });
+        }
+
+        const newCard = {
+          id: `kc-${Date.now()}`,
+          title: type === 'url' ? `关于 ${value.replace(/https?:\/\//, '').split('/')[0]} 的采集报告` : `${value} - 主题研究`,
+          source: value, sourceType: type === 'url' ? '技术博客' : '技术报告',
+          summary: `基于对 "${value}" 的深入分析，研究报告涵盖了核心概念、关键技术选型及最佳实践建议。`,
+          tags: type === 'url' ? ['网页采集', 'web'] : [value, 'AI分析'],
+          collectedAt: new Date().toISOString(),
+          relevance: Math.round((0.8 + Math.random() * 0.15) * 100) / 100,
+          tokenCount: Math.round(800 + Math.random() * 1200),
+          wordCount: Math.round(600 + Math.random() * 900)
+        };
+        setCards(prev => [newCard, ...prev]);
+        actions.setThinkingData({ status: 'done', tokenCount: 128 + CAPTURE_STAGES.length * 200 });
+        actions.addToast({ type: 'success', message: '采集完成，新知识卡已加入知识库' });
+        setCapturing(false);
+        if (type === 'topic') setInputValue('');
+      }, [actions]);
+
+      const removeCard = useCallback((id) => { setCards(prev => prev.filter(c => c.id !== id)); actions.addToast({ type: 'info', message: '知识卡已移除' }); }, [actions]);
+
+      const handleSubmit = (e) => { e?.preventDefault(); if (!inputValue.trim() || capturing) return; startCapture(inputType, inputValue.trim()); };
+
+      const filteredCards = cards.filter(c => !filterText || c.title.toLowerCase().includes(filterText.toLowerCase()) || c.tags.some(t => t.toLowerCase().includes(filterText.toLowerCase())));
+
+      return React.createElement('div', { className: 'space-y-4' },
+        // Capture form
+        React.createElement(Card, { className: 'mb-6 border-gray-700/50' },
+          CardContent({
+            className: 'p-5',
+            children: React.createElement('form', { onSubmit: handleSubmit, className: 'space-y-4' },
+              React.createElement('div', { className: 'flex items-center gap-2 bg-gray-800/60 rounded-lg p-1 w-fit border border-gray-700/50' },
+                React.createElement('button', { type: 'button', className: `px-3 py-1.5 rounded-md text-xs font-medium transition-all ${inputType === 'url' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`, onClick: () => setInputType('url'), 'aria-label': 'URL 模式' },
+                  React.createElement('div', { className: 'flex items-center gap-1.5' }, React.createElement(Link, { size: 12 }), 'URL 采集')
+                ),
+                React.createElement('button', { type: 'button', className: `px-3 py-1.5 rounded-md text-xs font-medium transition-all ${inputType === 'topic' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`, onClick: () => setInputType('topic'), 'aria-label': '主题模式' },
+                  React.createElement('div', { className: 'flex items-center gap-1.5' }, React.createElement(Search, { size: 12 }), '主题采集')
+                )
+              ),
+              React.createElement('div', { className: 'flex items-center gap-2 bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-2.5 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all' },
+                React.createElement(inputType === 'url' ? Link : Search, { size: 16, className: 'text-gray-500 flex-shrink-0' }),
+                React.createElement('input', {
+                  type: inputType === 'url' ? 'url' : 'text',
+                  placeholder: inputType === 'url' ? '输入 URL 链接...' : '输入研究主题...',
+                  value: inputValue,
+                  onChange: e => setInputValue(e.target.value),
+                  onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) handleSubmit(); },
+                  className: 'flex-1 bg-transparent text-sm text-gray-100 placeholder-gray-500 outline-none',
+                  disabled: capturing,
+                  'aria-label': '输入要采集的内容'
+                })
+              ),
+              React.createElement('div', { className: 'flex items-center justify-between' },
+                React.createElement('p', { className: 'text-[10px] text-gray-500' }, capturing ? 'AI 正在采集并分析内容...' : '按 Enter 提交'),
+                React.createElement(Button, { type: 'submit', disabled: !inputValue.trim() || capturing, loading: capturing, size: 'sm', ariaLabel: '开始采集' },
+                  capturing ? '采集中...' : React.createElement('span', { className: 'flex items-center gap-1.5' }, React.createElement(Sparkles, { size: 14 }), '开始采集')
+                )
+              )
+            )
+          })
+        ),
+        // Progress
+        capturing && React.createElement('div', { className: 'mb-6 p-4 rounded-xl bg-gray-800/60 border border-indigo-500/20' },
+          React.createElement('div', { className: 'flex items-center gap-3' },
+            React.createElement(Loader2, { size: 20, className: 'text-indigo-400 animate-spin' }),
+            React.createElement('div', { className: 'flex-1' },
+              React.createElement('div', { className: 'flex items-center justify-between mb-1.5' },
+                React.createElement('span', { className: 'text-sm text-gray-200 font-medium' }, CAPTURE_STAGES[captureStage]?.label || '处理中...'),
+                React.createElement('span', { className: 'text-xs text-gray-500' }, `${captureStage + 1}/${CAPTURE_STAGES.length}`)
+              ),
+              React.createElement('div', { className: 'h-1.5 bg-gray-700 rounded-full overflow-hidden' },
+                React.createElement(motion.div, {
+                  className: 'h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full',
+                  initial: { width: 0 },
+                  animate: { width: `${((captureStage + 1) / CAPTURE_STAGES.length) * 100}%` },
+                  transition: { duration: 0.5 }
+                })
+              )
+            )
+          )
+        ),
+        // Knowledge cards header
+        React.createElement('div', { className: 'flex items-center justify-between mb-3' },
+          React.createElement('div', { className: 'flex items-center gap-2 text-sm text-gray-400' },
+            React.createElement(Bookmark, { size: 16, className: 'text-indigo-400' }),
+            React.createElement('span', null, `知识库 (${filteredCards.length})`)
+          ),
+          React.createElement('div', { className: 'relative' },
+            React.createElement(Search, { size: 14, className: 'absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500' }),
+            React.createElement('input', {
+              type: 'text', placeholder: '过滤知识卡...', value: filterText,
+              onChange: e => setFilterText(e.target.value),
+              className: 'bg-gray-800/60 border border-gray-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-gray-200 placeholder-gray-500 outline-none focus:border-indigo-500/50 w-40',
+              'aria-label': '筛选知识卡'
+            })
+          )
+        ),
+        // Cards grid
+        filteredCards.length === 0
+          ? React.createElement('div', { className: 'text-center py-16 text-gray-500' },
+            React.createElement(FileText, { size: 40, className: 'mx-auto mb-3 opacity-30' }),
+            React.createElement('p', { className: 'text-sm' }, capturing ? '采集中...' : '暂无知识卡'),
+            React.createElement('p', { className: 'text-xs mt-1 text-gray-600' }, '输入 URL 或主题开始采集')
+          )
+          : React.createElement('div', { className: 'grid gap-4 md:grid-cols-2 xl:grid-cols-3' },
+            filteredCards.map((card, i) =>
+              React.createElement(motion.div, {
+                key: card.id,
+                initial: { opacity: 0, y: 20 },
+                animate: { opacity: 1, y: 0 },
+                exit: { opacity: 0, scale: 0.9 },
+                transition: { delay: i * 0.08, type: 'spring', damping: 20 }
+              },
+                React.createElement(GlowCard, { glowColor: 'indigo', glowIntensity: 'low' },
+                  React.createElement(Card, { className: 'border-0 bg-transparent' },
+                    CardHeader({
+                      children: [
+                        React.createElement('div', { key: 'ht', className: 'flex items-start justify-between gap-4' },
+                          React.createElement(CardTitle, { className: 'text-base mb-1.5' }, card.title),
+                          React.createElement(Tooltip, { content: '移除', side: 'left' },
+                            React.createElement('button', { onClick: () => removeCard(card.id), className: 'rounded-lg p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors', 'aria-label': '移除' }, React.createElement(Trash2, { size: 14 }))
+                          )
+                        ),
+                        React.createElement('div', { key: 'meta', className: 'flex items-center flex-wrap gap-2 mt-2' },
+                          React.createElement(SourceBadge, { sourceType: card.sourceType }),
+                          React.createElement('div', { className: 'flex items-center gap-1 text-[10px] text-gray-500' }, React.createElement(Clock, { size: 10 }), React.createElement('span', null, new Date(card.collectedAt).toLocaleDateString('zh-CN'))),
+                          React.createElement('div', { className: `flex items-center gap-1 text-[10px] font-medium ${card.relevance > 0.9 ? 'text-emerald-400' : 'text-gray-400'}` }, React.createElement(CheckCircle, { size: 10 }), React.createElement('span', null, `${Math.round(card.relevance * 100)}%`))
+                        )
+                      ]
+                    }),
+                    CardContent({
+                      children: React.createElement('div', { className: 'space-y-3' },
+                        React.createElement('p', { className: 'text-sm text-gray-300 leading-relaxed line-clamp-3' }, card.summary),
+                        React.createElement('div', { className: 'flex flex-wrap gap-1.5' }, card.tags.map((tag, ti) => React.createElement(TagBadge, { key: tag, tag, index: ti }))),
+                        React.createElement('a', { href: card.source, target: '_blank', rel: 'noopener noreferrer', className: 'inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 transition-colors' },
+                          React.createElement(Link, { size: 12 }), React.createElement('span', { className: 'truncate max-w-[300px]' }, card.source), React.createElement(ExternalLink, { size: 10 })
+                        )
+                      )
+                    })
+                  )
+                )
+              )
+            )
+          )
+      );
+    }
+
+    // ========================================================================
+    // MODULE 2: CHAT MODULE - 知识对话 (RAG Chat)
+    // ========================================================================
+    function CitationBadge({ id, label }) {
+      return React.createElement('a', { href: `#${id}`, className: 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/25 transition-colors', title: `查看引用: ${label}` }, `[${label}]`);
+    }
+
+    function MessageBubble({ message, isStreaming: isStream }) {
+      const isUser = message.role === 'user';
+      const [copied, setCopied] = useState(false);
+      const handleCopy = useCallback(() => { navigator.clipboard.writeText(message.content).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); }, [message.content]);
+
+      return React.createElement(motion.div, { className: `flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`, initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.3 } },
+        React.createElement('div', { className: `flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${isUser ? 'bg-indigo-600/30' : 'bg-gray-800'}` },
+          isUser ? React.createElement(User, { size: 16, className: 'text-indigo-400' }) : React.createElement(Bot, { size: 16, className: 'text-emerald-400' })
+        ),
+        React.createElement('div', { className: `flex-1 max-w-[85%] ${isUser ? 'flex flex-col items-end' : ''}` },
+          // Citations
+          !isUser && message.citations && message.citations.length > 0 && React.createElement('div', { className: 'flex items-center gap-1.5 mb-1.5' },
+            React.createElement(BookOpen, { size: 12, className: 'text-indigo-400' }),
+            React.createElement('span', { className: 'text-[10px] text-gray-500' }, '引用了'),
+            message.citations.map((cid) => {
+              const card = knowledgeCards.find(k => k.id === cid);
+              return React.createElement(CitationBadge, { key: cid, id: cid, label: card?.tags[0] || cid });
+            })
+          ),
+          // Bubble
+          React.createElement('div', { className: `relative group rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser ? 'bg-indigo-600/20 border border-indigo-500/30 text-gray-100' : 'bg-gray-800/60 border border-gray-700/50 text-gray-200'}` },
+            React.createElement('div', { className: 'prose prose-invert prose-sm max-w-none [&_pre]:bg-gray-900 [&_code]:text-emerald-300' }, renderMarkdown(message.content)),
+            React.createElement(Tooltip, { content: copied ? '已复制' : '复制', side: 'top' },
+              React.createElement('button', { onClick: handleCopy, className: `absolute top-2 right-2 rounded-lg p-1.5 transition-all opacity-0 group-hover:opacity-100 ${copied ? 'text-emerald-400' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-700/50'}`, 'aria-label': '复制' }, copied ? React.createElement(Check, { size: 14 }) : React.createElement(Copy, { size: 14 }))
+            )
+          ),
+          !isUser && message.tokenCount && React.createElement('div', { className: 'flex items-center gap-2 mt-1 px-1' },
+            React.createElement('span', { className: 'text-[10px] text-gray-600' }, `${message.tokenCount} tokens`),
+            React.createElement('span', { className: 'text-[10px] text-gray-600' }, 'deepseek-v4-pro[1m]')
+          )
+        )
+      );
+    }
+
+    function StreamingMessage({ content }) {
+      if (!content) return null;
+      return React.createElement('div', { className: 'flex gap-3' },
+        React.createElement('div', { className: 'flex-shrink-0 w-8 h-8 rounded-xl bg-gray-800 flex items-center justify-center' }, React.createElement(Bot, { size: 16, className: 'text-emerald-400' })),
+        React.createElement('div', { className: 'flex-1 max-w-[85%]' },
+          React.createElement('div', { className: 'relative rounded-2xl px-4 py-3 text-sm leading-relaxed bg-gray-800/60 border border-gray-700/50 text-gray-200', style: { borderLeft: '3px solid #6366f1' } },
+            React.createElement('div', { className: 'prose prose-invert prose-sm max-w-none' }, renderMarkdown(content)),
+            React.createElement('span', { className: 'inline-block w-1.5 h-4 bg-indigo-400 ml-0.5 animate-pulse align-text-bottom' })
+          )
+        )
+      );
+    }
+
+    function ChatModule() {
+      const { state, actions } = useApp();
+      const [input, setInput] = useState('');
+      const [messages, setMessages] = useState(chatHistory);
+      const [isStreaming, setIsStreaming] = useState(false);
+      const [streamContent, setStreamContent] = useState('');
+      const [showSuggestions, setShowSuggestions] = useState(true);
+      const chatEndRef = useRef(null);
+      const inputRef = useRef(null);
+      const streamRef = useRef(null);
+
+      useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, streamContent]);
+      useEffect(() => { inputRef.current?.focus(); }, []);
+
+      const sendMessage = useCallback(async (text) => {
+        const query = text || input;
+        if (!query.trim() || isStreaming) return;
+
+        const userMsg = { id: `msg-${Date.now()}`, role: 'user', content: query.trim(), timestamp: new Date().toISOString() };
+        setMessages(prev => [...prev, userMsg]);
+        setInput('');
+        setIsStreaming(true);
+        setStreamContent('');
+        setShowSuggestions(false);
+
+        actions.setThinkingPanel(true);
+        actions.setThinkingData({
+          prompt: `你是一个基于知识库的 AI 助手。\n\n用户问题: ${query}\n\n基于知识库回答。`,
+          tokenCount: 0, status: 'thinking',
+          logs: [
+            { action: '接收查询', content: `收到: "${query}"`, timestamp: Date.now() },
+            { action: '知识检索', content: '检索相关文档...', timestamp: Date.now() + 100 }
+          ]
+        });
+
+        const response = getSimulatedResponse(query) || defaultResponse;
+        let chars = response.split('');
+        let idx = 0;
+        let acc = '';
+
+        await new Promise(r => setTimeout(r, 500));
+
+        function typeit() {
+          if (idx >= chars.length) {
+            const resp = { id: `msg-${Date.now()}-r`, role: 'assistant', content: acc, citations: ['kc-001', 'kc-005'], timestamp: new Date().toISOString(), tokenCount: Math.round(acc.length * 0.75) };
+            setMessages(prev => [...prev, resp]);
+            setIsStreaming(false);
+            setStreamContent('');
+            actions.setThinkingData({ status: 'done', tokenCount: Math.round(acc.length * 0.75), logs: [{ action: '完成', content: `回答完成，${acc.length} 字`, timestamp: Date.now() }] });
+            return;
+          }
+          const c = chars[idx];
+          acc += c;
+          setStreamContent(acc);
+          idx++;
+          let delay = 15;
+          if (c === '\n') delay = 80;
+          else if ('。！？'.includes(c)) delay = 120;
+          else if ('，；'.includes(c)) delay = 40;
+          else if (c === ' ') delay = 5;
+          streamRef.current = setTimeout(typeit, delay);
+        }
+        typeit();
+      }, [input, isStreaming, actions]);
+
+      const clearChat = useCallback(() => { setMessages([]); setShowSuggestions(true); actions.addToast({ type: 'info', message: '对话已清空' }); }, [actions]);
+      const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+      const handleSuggested = (q) => sendMessage(q);
+      useEffect(() => () => clearTimeout(streamRef.current), []);
+
+      return React.createElement('div', { className: 'flex flex-col h-[calc(100vh-12rem)]' },
+        React.createElement('div', { className: 'flex-1 overflow-y-auto space-y-4 mb-4 px-1' },
+          (messages.length === 0)
+            ? React.createElement('div', { className: 'text-center py-16' },
+              React.createElement('div', { className: 'w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 flex items-center justify-center mx-auto mb-4 border border-indigo-500/20' }, React.createElement(MessageSquare, { size: 28, className: 'text-indigo-400' })),
+              React.createElement('h3', { className: 'text-lg font-semibold text-white mb-2' }, '开始知识对话'),
+              React.createElement('p', { className: 'text-sm text-gray-400 max-w-md mx-auto mb-8' }, '基于知识库进行智能问答，支持多轮对话与引用溯源。')
+            )
+            : React.createElement('div', { className: 'space-y-4' },
+              messages.map(msg => React.createElement(MessageBubble, { key: msg.id, message: msg })),
+              isStreaming && React.createElement(StreamingMessage, { content: streamContent })
+            ),
+          showSuggestions && messages.length === 0 && React.createElement('div', { className: 'space-y-2' },
+            React.createElement('p', { className: 'text-xs text-gray-500 mb-3 flex items-center gap-2' }, React.createElement(Sparkles, { size: 12 }), '推荐问题'),
+            suggestedQuestions.map((q, i) =>
+              React.createElement(motion.button, {
+                key: q, className: 'flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800/50 border border-gray-700/50 text-sm text-gray-300 hover:bg-gray-700/50 hover:border-indigo-500/30 hover:text-white transition-all text-left w-full',
+                onClick: () => handleSuggested(q),
+                initial: { opacity: 0, y: 10 },
+                animate: { opacity: 1, y: 0 },
+                transition: { delay: i * 0.1 },
+                whileHover: { scale: 1.01 }, whileTap: { scale: 0.99 }
+              },
+                React.createElement(Lightbulb, { size: 14, className: 'text-amber-400 flex-shrink-0' }),
+                React.createElement('span', { className: 'flex-1' }, q),
+                React.createElement(Plus, { size: 14, className: 'text-gray-500 flex-shrink-0' })
+              )
+            )
+          ),
+          React.createElement('div', { ref: chatEndRef })
+        ),
+        messages.length > 0 && React.createElement('div', { className: 'flex items-center justify-between mb-3' },
+          React.createElement('div', { className: 'flex items-center gap-2 text-xs text-gray-500' }, React.createElement(BookOpen, { size: 12 }), React.createElement('span', null, `${messages.filter(m => m.role === 'assistant').length} 条回复`)),
+          React.createElement(Tooltip, { content: '清空对话' },
+            React.createElement('button', { onClick: clearChat, className: 'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors', 'aria-label': '清空' }, React.createElement(Trash2, { size: 12 }), '清空对话')
+          )
+        ),
+        React.createElement(GlowCard, { glowColor: 'indigo', glowIntensity: 'low', className: 'flex-shrink-0' },
+          React.createElement('div', { className: 'flex items-end gap-3 p-3 bg-gray-900/90 rounded-xl border border-gray-800' },
+            React.createElement('div', { className: 'flex-1 relative' },
+              React.createElement('textarea', {
+                ref: inputRef, value: input,
+                onChange: e => setInput(e.target.value),
+                onKeyDown: handleKeyDown,
+                placeholder: '输入你的问题... (Enter 发送, Shift+Enter 换行)', rows: 2,
+                className: 'w-full bg-transparent text-sm text-gray-100 placeholder-gray-500 outline-none resize-none leading-relaxed',
+                disabled: isStreaming, 'aria-label': '输入问题'
+              })
+            ),
+            React.createElement(Tooltip, { content: isStreaming ? '生成中...' : '发送' },
+              React.createElement(Button, { onClick: () => sendMessage(), disabled: !input.trim() || isStreaming, loading: isStreaming, size: 'icon', variant: 'default', className: 'rounded-xl', ariaLabel: '发送' },
+                isStreaming ? React.createElement(Loader2, { size: 16, className: 'animate-spin' }) : React.createElement(Send, { size: 16 })
+              )
+            )
+          )
+        )
+      );
+    }
+
+    // ========================================================================
+    // MODULE 3: PIPELINE MODULE - 工作流编排
+    // ========================================================================
+    const NODE_ICONS_MAP = { 'input-collector': FileSearch, 'researcher': Search, 'writer': PenLine, 'reviewer': ClipboardCheck };
+
+    function PipelineNode({ node, idx, onToggleOutput, showOutput }) {
+      const isActive = node.status === 'running';
+      const isDone = node.status === 'done';
+      const isError = node.status === 'error';
+      const statusCfg = {
+        idle: { border: 'border-gray-700', icon: 'text-gray-500', bg: 'bg-gray-800/50' },
+        running: { border: 'border-indigo-500/50', icon: 'text-indigo-400', bg: 'bg-indigo-600/10' },
+        done: { border: 'border-emerald-500/50', icon: 'text-emerald-400', bg: 'bg-emerald-600/10' },
+        error: { border: 'border-red-500/50', icon: 'text-red-400', bg: 'bg-red-600/10' }
+      };
+      const sc = isError ? statusCfg.error : isDone ? statusCfg.done : isActive ? statusCfg.running : statusCfg.idle;
+      const NodeIcon = NODE_ICONS_MAP[node.id] || FileSearch;
+
+      return React.createElement(motion.div, { layout: true },
+        React.createElement(GlowCard, { glowColor: isActive ? 'indigo' : isDone ? 'emerald' : 'indigo', glowIntensity: isActive ? 'medium' : 'low' },
+          React.createElement('div', { className: `p-4 rounded-xl border ${sc.border} ${sc.bg} transition-all cursor-pointer`, onClick: () => onToggleOutput(node.id) },
+            React.createElement('div', { className: 'flex items-center gap-3 mb-3' },
+              React.createElement('div', { className: `w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isActive ? 'bg-indigo-600/30 animate-pulse' : isDone ? 'bg-emerald-600/20' : 'bg-gray-800'}` },
+                isActive ? React.createElement(Loader2, { size: 20, className: 'text-indigo-400 animate-spin' }) : isDone ? React.createElement(CheckCircle2, { size: 20, className: 'text-emerald-400' }) : React.createElement(NodeIcon, { size: 20, className: sc.icon })
+              ),
+              React.createElement('div', { className: 'flex-1' },
+                React.createElement('h4', { className: 'text-sm font-semibold text-white' }, node.name),
+                React.createElement('p', { className: 'text-[10px] text-gray-500 mt-0.5' }, node.description)
+              ),
+              React.createElement('div', { className: `flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${isActive ? 'bg-indigo-500/20 text-indigo-300' : isDone ? 'bg-emerald-500/20 text-emerald-300' : isError ? 'bg-red-500/20 text-red-300' : 'bg-gray-800 text-gray-500'}` },
+                isActive && React.createElement(Loader2, { size: 10, className: 'animate-spin' }),
+                isActive ? `${Math.round(node.progress)}%` : isDone ? '完成' : isError ? '错误' : '待命'
+              )
+            ),
+            isActive && React.createElement('div', { className: 'h-1 bg-gray-700 rounded-full overflow-hidden mb-2' },
+              React.createElement(motion.div, { className: 'h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full', initial: { width: 0 }, animate: { width: `${node.progress}%` }, transition: { duration: 0.3 } })
+            ),
+            React.createElement('p', { className: 'text-xs text-gray-400 line-clamp-2' }, node.output ? (node.output.length > 100 ? node.output.slice(0, 100) + '...' : node.output) : '等待执行...'),
+            React.createElement('div', { className: 'flex items-center justify-between mt-2 pt-2 border-t border-gray-800' },
+              React.createElement('span', { className: 'text-[10px] text-gray-600 flex items-center gap-1' }, React.createElement(Terminal, { size: 10 }), React.createElement('span', null, node.output ? `${node.output.length} 字` : '无输出')),
+              React.createElement(Tooltip, { content: showOutput === node.id ? '收起' : '展开' },
+                React.createElement('button', { onClick: (e) => { e.stopPropagation(); onToggleOutput(node.id); }, className: 'rounded p-1 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors', 'aria-label': '切换输出' },
+                  showOutput === node.id ? React.createElement(ChevronUp, { size: 14 }) : React.createElement(ChevronDown, { size: 14 })
+                )
+              )
+            )
+          )
+        ),
+        // Output panel
+        React.createElement(AnimatePresence, null,
+          showOutput === node.id && node.output && React.createElement(motion.div, {
+            className: 'mt-2 rounded-xl bg-gray-900/80 border border-gray-700/50 overflow-hidden',
+            initial: { height: 0, opacity: 0 },
+            animate: { height: 'auto', opacity: 1 },
+            exit: { height: 0, opacity: 0 },
+            transition: { duration: 0.2 }
+          },
+            React.createElement('div', { className: 'px-4 py-3 border-b border-gray-800 flex items-center justify-between' },
+              React.createElement('span', { className: 'text-xs font-medium text-gray-400' }, `${node.name} 输出`),
+              React.createElement('span', { className: 'text-[10px] text-gray-600' }, '模拟输出')
+            ),
+            React.createElement('div', { className: 'p-4 text-sm text-gray-300 leading-relaxed max-h-60 overflow-y-auto font-mono text-xs' }, renderMarkdown(node.output))
+          )
+        )
+      );
+    }
+
+    function PipelineModule() {
+      const { state, actions } = useApp();
+      const [input, setInput] = useState('');
+      const [nodes, setNodes] = useState(pipelineConfig.nodes.map(n => ({ ...n })));
+      const [running, setRunning] = useState(false);
+      const [expandedOut, setExpandedOut] = useState(null);
+      const [completed, setCompleted] = useState(0);
+      const abortRef = useRef(false);
+
+      const runPipeline = useCallback(async () => {
+        if (!input.trim() || running) return;
+        const fresh = pipelineConfig.nodes.map(n => ({ ...n, status: 'idle', progress: 0, output: '' }));
+        setNodes(fresh);
+        setRunning(true);
+        setCompleted(0);
+        abortRef.current = false;
+
+        actions.setThinkingPanel(true);
+        actions.setThinkingData({
+          prompt: `Agent 流水线任务: ${input}\n\n4 节点: ${fresh.map(n => n.name).join(' -> ')}`,
+          tokenCount: 0, status: 'thinking',
+          logs: [{ action: '初始化', content: `任务: ${input}`, timestamp: Date.now() }]
+        });
+
+        for (let i = 0; i < fresh.length; i++) {
+          if (abortRef.current) break;
+          const node = fresh[i];
+
+          setNodes(prev => prev.map(n => n.id === node.id ? { ...n, status: 'running', progress: 0 } : n));
+          const duration = nodeDurations[node.id] || 2000;
+
+          for (let s = 0; s <= 20; s++) {
+            if (abortRef.current) break;
+            await new Promise(r => setTimeout(r, duration / 20));
+            setNodes(prev => prev.map(n => n.id === node.id ? { ...n, progress: (s / 20) * 100 } : n));
+          }
+          if (abortRef.current) break;
+
+          const output = getSimulationOutput(node.id);
+          setNodes(prev => prev.map(n => n.id === node.id ? { ...n, status: 'done', progress: 100, output } : n));
+          setCompleted(prev => prev + 1);
+
+          actions.setThinkingData({
+            tokenCount: (i + 1) * 500,
+            logs: [{ action: `${node.name} 完成`, content: `输出 ${output.length} 字符`, timestamp: Date.now() }]
+          });
+        }
+
+        if (!abortRef.current) {
+          actions.setThinkingData({ status: 'done' });
+          actions.addToast({ type: 'success', message: '流水线执行完成！' });
+        }
+        setRunning(false);
+      }, [input, running, actions]);
+
+      const resetPipeline = useCallback(() => {
+        setNodes(pipelineConfig.nodes.map(n => ({ ...n, status: 'idle', progress: 0, output: '' })));
+        setRunning(false);
+        setCompleted(0);
+        setExpandedOut(null);
+        abortRef.current = true;
+      }, []);
+
+      const toggleOutput = useCallback((id) => { setExpandedOut(prev => prev === id ? null : id); }, []);
+
+      return React.createElement('div', { className: 'space-y-4' },
+        // Input
+        React.createElement(Card, { className: 'mb-6 border-gray-700/50' },
+          CardContent({
+            className: 'p-4',
+            children: React.createElement('div', { className: 'space-y-3' },
+              React.createElement('div', { className: 'flex items-center gap-2 text-sm text-gray-300 font-medium' }, React.createElement(Zap, { size: 16, className: 'text-amber-400' }), '输入任务描述'),
+              React.createElement('textarea', {
+                value: input, onChange: e => setInput(e.target.value),
+                onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runPipeline(); } },
+                placeholder: '描述任务，例如：\n"调研 AI Agent 在软件开发中的应用现状"', rows: 3,
+                className: 'w-full bg-gray-800/60 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 outline-none resize-none focus:border-indigo-500/50',
+                disabled: running, 'aria-label': '输入任务描述'
+              }),
+              React.createElement('div', { className: 'flex items-center justify-between' },
+                React.createElement('span', { className: 'text-[10px] text-gray-500' }, running ? '执行中...' : '按 Enter 提交'),
+                React.createElement('div', { className: 'flex gap-2' },
+                  React.createElement(Tooltip, { content: '重置' },
+                    React.createElement(Button, { variant: 'outline', size: 'sm', onClick: resetPipeline, disabled: running || !input, ariaLabel: '重置' }, React.createElement(RotateCcw, { size: 14 }), '重置')
+                  ),
+                  React.createElement(Button, { onClick: runPipeline, disabled: !input.trim() || running, loading: running, size: 'sm', ariaLabel: '运行流水线' },
+                    running ? React.createElement(React.Fragment, null, React.createElement(Loader2, { size: 14, className: 'animate-spin mr-1' }), '执行中...') : React.createElement(React.Fragment, null, React.createElement(Play, { size: 14 }), '运行流水线')
+                  )
+                )
+              )
+            )
+          })
+        ),
+        // Pipeline status
+        React.createElement('div', { className: 'flex items-center justify-between mb-2' },
+          React.createElement('div', { className: 'flex items-center gap-2 text-sm text-gray-400' },
+            React.createElement(GitBranch, { size: 16, className: 'text-indigo-400' }),
+            React.createElement('span', null, 'Agent 流水线'),
+            React.createElement('span', { className: 'text-xs text-gray-600' }, `(${completed}/${nodes.length})`)
+          ),
+          running && React.createElement(Button, { variant: 'destructive', size: 'sm', onClick: resetPipeline, ariaLabel: '停止' }, React.createElement(Square, { size: 14 }), '停止')
+        ),
+        // Nodes
+        React.createElement('div', { className: 'space-y-1' },
+          nodes.map((node, i) => React.createElement(React.Fragment, { key: node.id },
+            React.createElement(PipelineNode, { node, idx: i, onToggleOutput: toggleOutput, showOutput: expandedOut }),
+            i < nodes.length - 1 && React.createElement('div', { className: 'flex items-center justify-center py-1' },
+              React.createElement('div', { className: `w-0.5 h-8 rounded-full transition-all ${nodes[i + 1].status === 'done' ? 'bg-emerald-500' : nodes[i + 1].status === 'running' ? 'bg-indigo-500 animate-pulse' : 'bg-gray-700'}` }),
+              React.createElement(ArrowRight, { size: 12, className: `ml-1 transition-all ${nodes[i + 1].status === 'done' ? 'text-emerald-400' : nodes[i + 1].status === 'running' ? 'text-indigo-400' : 'text-gray-600'}` })
+            )
+          ))
+        ),
+        // Complete message
+        !running && completed === nodes.length && React.createElement(motion.div, {
+          className: 'p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center',
+          initial: { opacity: 0, y: 10 },
+          animate: { opacity: 1, y: 0 }
+        },
+          React.createElement(CheckCircle2, { size: 24, className: 'text-emerald-400 mx-auto mb-2' }),
+          React.createElement('p', { className: 'text-sm font-medium text-emerald-300' }, '流水线执行完成'),
+          React.createElement('p', { className: 'text-xs text-gray-400 mt-1' }, '可查看各节点输出或前往"成果产出"查看完整报告')
+        )
+      );
+    }
+
+    // ========================================================================
+    // MODULE 4: OUTPUT MODULE - 成果产出
+    // ========================================================================
+    const OUTPUT_TYPE_CONFIG = {
+      research: { icon: FileText, label: '调研报告', color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+      article: { icon: Newspaper, label: '公众号推文', color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/20' },
+      weekly: { icon: Calendar, label: '周报摘要', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' }
+    };
+
+    function StatusBadge2({ status }) {
+      const cfg = {
+        final: { label: '终稿', icon: CheckCircle2, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+        draft: { label: '草稿', icon: Edit3, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+        published: { label: '已发布', icon: CheckCircle2, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' }
+      };
+      const c = cfg[status] || cfg.draft;
+      return React.createElement('span', { className: `inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium border ${c.color}` },
+        React.createElement(c.icon, { size: 10 }), c.label
+      );
+    }
+
+    function OutputModule() {
+      const { state, actions } = useApp();
+      const [activeTab, setActiveTab] = useState('research');
+      const [viewItem, setViewItem] = useState(null);
+
+      const items = getDeliverablesByType(activeTab);
+
+      const handleCopy = useCallback((item) => {
+        navigator.clipboard.writeText(item.content).then(() => actions.addToast({ type: 'success', message: '内容已复制' }));
+      }, [actions]);
+
+      const handleDownload = useCallback((item) => {
+        const blob = new Blob([item.content], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${item.title.replace(/[\\/:*?"<>|]/g, '_')}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+        actions.addToast({ type: 'success', message: '文件已下载' });
+      }, [actions]);
+
+      const typeConfig = OUTPUT_TYPE_CONFIG[activeTab] || OUTPUT_TYPE_CONFIG.research;
+
+      return React.createElement('div', { className: 'space-y-4' },
+        React.createElement(Tabs, { defaultValue: 'research', value: activeTab, onValueChange: setActiveTab },
+          React.createElement(TabsList, { className: 'mb-6' },
+            React.createElement(TabsTrigger, { value: 'research' }, React.createElement(FileText, { size: 14 }), React.createElement('span', { className: 'ml-1.5' }, '调研报告'), React.createElement('span', { className: 'ml-1.5 text-[10px] text-gray-500' }, `(${(deliverableData.research || []).length})`)),
+            React.createElement(TabsTrigger, { value: 'article' }, React.createElement(Newspaper, { size: 14 }), React.createElement('span', { className: 'ml-1.5' }, '公众号推文'), React.createElement('span', { className: 'ml-1.5 text-[10px] text-gray-500' }, `(${(deliverableData.article || []).length})`)),
+            React.createElement(TabsTrigger, { value: 'weekly' }, React.createElement(Calendar, { size: 14 }), React.createElement('span', { className: 'ml-1.5' }, '周报摘要'), React.createElement('span', { className: 'ml-1.5 text-[10px] text-gray-500' }, `(${(deliverableData.weekly || []).length})`))
+          ),
+          React.createElement(TabsContent, { value: activeTab },
+            items.length === 0
+              ? React.createElement('div', { className: 'text-center py-16 text-gray-500' }, React.createElement(FileText, { size: 40, className: 'mx-auto mb-3 opacity-30' }), React.createElement('p', { className: 'text-sm' }, '暂无内容'), React.createElement('p', { className: 'text-xs mt-1 text-gray-600' }, '运行 Agent 流水线生成内容'))
+              : React.createElement('div', { className: 'space-y-3' },
+                items.map((item, i) => {
+                  const tc = OUTPUT_TYPE_CONFIG[item.type] || OUTPUT_TYPE_CONFIG.research;
+                  const Icon = tc.icon;
+                  return React.createElement(motion.div, { key: item.id, initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: i * 0.08 } },
+                    React.createElement(GlowCard, { glowColor: item.type === 'research' ? 'indigo' : item.type === 'article' ? 'pink' : 'emerald', glowIntensity: 'low' },
+                      React.createElement(Card, { className: 'border-0 bg-transparent' },
+                        CardHeader({
+                          className: 'pb-3',
+                          children: [
+                            React.createElement('div', { key: 'h', className: 'flex items-start justify-between gap-3' },
+                              React.createElement('div', { className: 'flex items-center gap-3 min-w-0' },
+                                React.createElement('div', { className: `w-10 h-10 rounded-xl ${tc.bg} border ${tc.border} flex items-center justify-center flex-shrink-0` }, React.createElement(Icon, { size: 20, className: tc.color })),
+                                React.createElement('div', { className: 'min-w-0' },
+                                  React.createElement(CardTitle, { className: 'text-sm mb-1 truncate' }, item.title),
+                                  React.createElement('div', { className: 'flex items-center gap-2' },
+                                    React.createElement('span', { className: `text-[10px] font-medium ${tc.color}` }, tc.label),
+                                    React.createElement(StatusBadge2, { status: item.status })
+                                  )
+                                )
+                              ),
+                              React.createElement('div', { className: 'flex items-center gap-1' },
+                                React.createElement(Tooltip, { content: '查看' },
+                                  React.createElement('button', { onClick: () => setViewItem(item), className: 'rounded-lg p-1.5 text-gray-500 hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors', 'aria-label': '查看' }, React.createElement(Eye, { size: 14 }))
+                                ),
+                                React.createElement(Tooltip, { content: '复制' },
+                                  React.createElement('button', { onClick: () => handleCopy(item), className: 'rounded-lg p-1.5 text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors', 'aria-label': '复制' }, React.createElement(Copy, { size: 14 }))
+                                ),
+                                React.createElement(Tooltip, { content: '下载' },
+                                  React.createElement('button', { onClick: () => handleDownload(item), className: 'rounded-lg p-1.5 text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors', 'aria-label': '下载' }, React.createElement(Download, { size: 14 }))
+                                )
+                              )
+                            ),
+                            React.createElement('p', { key: 's', className: 'text-xs text-gray-400 leading-relaxed mt-2 line-clamp-2' }, item.summary)
+                          ]
+                        }),
+                        CardFooter({
+                          className: 'pt-3 border-t border-gray-800/50',
+                          children: React.createElement('div', { className: 'flex items-center justify-between w-full' },
+                            React.createElement('div', { className: 'flex items-center gap-3' },
+                              React.createElement('div', { className: 'flex items-center gap-1 text-[10px] text-gray-500' }, React.createElement(Clock, { size: 10 }), React.createElement('span', null, new Date(item.createdAt).toLocaleDateString('zh-CN'))),
+                              React.createElement('div', { className: 'flex items-center gap-1 text-[10px] text-gray-500' }, React.createElement(BookOpen, { size: 10 }), React.createElement('span', null, `${item.wordCount} 字`))
+                            ),
+                            React.createElement('div', { className: 'flex flex-wrap gap-1' }, item.tags?.map(t => React.createElement('span', { key: t, className: 'text-[9px] px-1.5 py-0.5 rounded bg-gray-800 text-gray-500' }, t)))
+                          )
+                        })
+                      )
+                    )
+                  );
+                })
+              )
+          )
+        ),
+        // Preview dialog
+        React.createElement(Dialog, { open: !!viewItem, onClose: () => setViewItem(null), title: viewItem?.title || '', size: 'xl' },
+          viewItem && React.createElement('div', { className: 'space-y-4' },
+            React.createElement('div', { className: 'flex items-center flex-wrap gap-3 pb-4 border-b border-gray-800' },
+              React.createElement('div', { className: `flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${OUTPUT_TYPE_CONFIG[viewItem.type]?.bg || ''} ${OUTPUT_TYPE_CONFIG[viewItem.type]?.color || ''} border ${OUTPUT_TYPE_CONFIG[viewItem.type]?.border || ''}` },
+                React.createElement(FileText, { size: 12 }),
+                OUTPUT_TYPE_CONFIG[viewItem.type]?.label
+              ),
+              React.createElement(StatusBadge2, { status: viewItem.status }),
+              React.createElement('span', { className: 'text-xs text-gray-500' }, `${viewItem.wordCount} 字 | ${new Date(viewItem.createdAt).toLocaleDateString('zh-CN')}`)
+            ),
+            React.createElement('div', { className: 'prose prose-invert prose-sm max-w-none max-h-[50vh] overflow-y-auto' }, renderMarkdown(viewItem.content)),
+            React.createElement('div', { className: 'flex items-center justify-end gap-2 pt-4 border-t border-gray-800' },
+              React.createElement(Button, { variant: 'outline', size: 'sm', onClick: () => handleCopy(viewItem), ariaLabel: '复制' }, React.createElement(Copy, { size: 14 }), '复制全文'),
+              React.createElement(Button, { variant: 'default', size: 'sm', onClick: () => handleDownload(viewItem), ariaLabel: '下载' }, React.createElement(Download, { size: 14 }), '下载 Markdown')
+            )
+          )
+        )
+      );
+    }
+
+    // ========================================================================
+    // MODULE ROUTER & APP
+    // ========================================================================
+    function ModuleRouter() {
+      const { state } = useApp();
+      switch (state.activeModule) {
+        case 'capture': return React.createElement(CaptureModule);
+        case 'chat': return React.createElement(ChatModule);
+        case 'pipeline': return React.createElement(PipelineModule);
+        case 'output': return React.createElement(OutputModule);
+        default: return React.createElement(CaptureModule);
+      }
+    }
+
+    function AppRoot() {
+      const { state, actions } = useApp();
+      useEffect(() => {
+        document.documentElement.classList.toggle('dark', state.theme === 'dark');
+      }, [state.theme]);
+
+      return React.createElement(React.Fragment, null,
+        React.createElement(Layout, null, React.createElement(ModuleRouter, null)),
+        React.createElement(ThinkingPanel, null)
+      );
+    }
+
+    // ========================================================================
+    // BOOTSTRAP - Render the app
+    // ========================================================================
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      const root = ReactDOM.createRoot(rootEl);
+      root.render(
+        React.createElement(React.StrictMode, null,
+          React.createElement(AppProvider, null,
+            React.createElement(AppRoot, null)
+          )
+        )
+      );
+    }
+  </script>
+</body>
+</html>

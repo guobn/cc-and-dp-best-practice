@@ -1,0 +1,379 @@
+/**
+ * styles/minimal.css — Minimalism（极简主义）
+ * 关键视觉特征：极致留白 + 单一色 + 细体字 + 几乎无装饰
+ */
+
+/* ===== 背景 ===== */
+.style-minimal body {
+  background: #ffffff;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300;
+}
+
+.style-minimal #app {
+  background: #ffffff;
+}
+
+/* ===== Header ===== */
+.style-minimal .app-header {
+  background: #ffffff;
+  border-bottom: 1px solid #eee;
+  padding: 16px 32px;
+  backdrop-filter: none;
+}
+
+.style-minimal .logo {
+  font-weight: 200;
+  font-size: 1.3rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #999;
+}
+
+/* ===== Style Switcher ===== */
+.style-minimal .style-btn {
+  background: #fff !important;
+  border: 1px solid #ddd !important;
+  border-radius: 50% !important;
+  box-shadow: none !important;
+  color: #999 !important;
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 1rem !important;
+}
+
+.style-minimal .style-btn.active {
+  border-color: #333 !important;
+  color: #333 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.style-minimal .style-btn:hover {
+  border-color: #999 !important;
+}
+
+/* ===== Sidebar ===== */
+.style-minimal .ai-sidebar {
+  background: #fafafa;
+  border-right: 1px solid #eee;
+  padding: 20px;
+}
+
+.style-minimal .ai-sidebar-title {
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #999;
+  border-bottom: 1px solid #eee;
+}
+
+.style-minimal .ai-sidebar-item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.style-minimal .ai-sidebar-item .label {
+  font-weight: 300;
+  letter-spacing: 1px;
+  color: #bbb;
+}
+
+.style-minimal .ai-sidebar-item .value {
+  font-weight: 300;
+  color: #666;
+}
+
+/* ===== Module Tabs ===== */
+.style-minimal .module-tabs {
+  border-bottom: 1px solid #eee;
+  padding: 0 32px;
+}
+
+.style-minimal .tab-btn {
+  font-weight: 300;
+  font-size: 0.85rem;
+  color: #ccc;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  border-bottom: 2px solid transparent;
+}
+
+.style-minimal .tab-btn.active {
+  color: #333;
+  border-bottom-color: #333;
+  font-weight: 300;
+}
+
+.style-minimal .tab-btn:hover {
+  color: #666;
+}
+
+/* ===== Cards ===== */
+.style-minimal .card {
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 24px;
+}
+
+.style-minimal .card-title {
+  font-weight: 300;
+  font-size: 1rem;
+  color: #333;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Knowledge Cards ===== */
+.style-minimal .knowledge-card {
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 20px;
+}
+
+.style-minimal .knowledge-card:hover {
+  background: #f5f5f5;
+}
+
+.style-minimal .tag {
+  background: transparent;
+  color: #bbb;
+  border: 1px solid #e0e0e0;
+  border-radius: 0;
+  font-weight: 300;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+}
+
+/* ===== Buttons ===== */
+.style-minimal .btn {
+  background: transparent;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  color: #666;
+  font-weight: 300;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  padding: 8px 20px;
+  box-shadow: none;
+  text-transform: uppercase;
+}
+
+.style-minimal .btn:hover {
+  border-color: #999;
+  color: #333;
+  background: transparent;
+  box-shadow: none;
+}
+
+.style-minimal .btn:active {
+  background: #f5f5f5;
+  transform: none;
+}
+
+.style-minimal .btn-primary {
+  background: #333;
+  border-color: #333;
+  color: #fff;
+}
+
+.style-minimal .btn-primary:hover {
+  background: #555;
+  border-color: #555;
+  color: #fff;
+}
+
+/* ===== Inputs ===== */
+.style-minimal .input-field {
+  border: none;
+  border-bottom: 1px solid #ddd;
+  border-radius: 0;
+  background: transparent;
+  color: #333;
+  font-weight: 300;
+  padding: 8px 0;
+}
+
+.style-minimal .input-field::placeholder {
+  color: #ccc;
+  font-weight: 200;
+}
+
+.style-minimal .input-field:focus {
+  border-bottom-color: #333;
+  box-shadow: none;
+}
+
+/* ===== Chat ===== */
+.style-minimal .chat-message.user {
+  background: #333;
+  border: none;
+  border-radius: 0;
+  color: #fff;
+  font-weight: 300;
+}
+
+.style-minimal .chat-message.assistant {
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  color: #333;
+  font-weight: 300;
+}
+
+.style-minimal .chat-message .citation-link {
+  background: transparent;
+  color: #999;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  font-weight: 300;
+  font-size: 0.65rem;
+}
+
+/* ===== Pipeline ===== */
+.style-minimal .pipeline-node {
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid #eee;
+}
+
+.style-minimal .pipeline-node .node-name {
+  font-weight: 300;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.style-minimal .pipeline-node .node-icon {
+  font-size: 1.5rem;
+  opacity: 0.5;
+}
+
+.style-minimal .pipeline-node.active {
+  background: #f5f5f5;
+  border-bottom-color: #333;
+}
+
+.style-minimal .pipeline-node.active .node-name {
+  color: #333;
+}
+
+.style-minimal .pipeline-node.completed {
+  background: #fafafa;
+}
+
+.style-minimal .pipeline-node.completed .node-icon {
+  opacity: 1;
+}
+
+.style-minimal .pipeline-connector {
+  background: #eee;
+  height: 1px;
+}
+
+.style-minimal .pipeline-connector.active::after {
+  background: #333;
+}
+
+.style-minimal .pipeline-output {
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  color: #666;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  font-weight: 300;
+}
+
+/* ===== Deliverables ===== */
+.style-minimal .deliverable-card {
+  background: #fafafa;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid #eee;
+  padding: 20px 0;
+}
+
+.style-minimal .deliverable-card h3 {
+  font-weight: 300;
+  color: #333;
+  letter-spacing: 1px;
+}
+
+.style-minimal .deliverable-preview .preview-content {
+  background: #fff;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: #333;
+}
+
+.style-minimal .deliverable-preview .preview-content .close-btn {
+  color: #ccc;
+}
+
+/* ===== Toast ===== */
+.style-minimal .toast {
+  background: #333;
+  color: #fff;
+  border-radius: 0;
+  font-weight: 200;
+  letter-spacing: 1px;
+  box-shadow: none;
+  border: none;
+}
+
+/* ===== Typography ===== */
+.style-minimal h1, .style-minimal h2, .style-minimal h3 {
+  font-weight: 200;
+  color: #333;
+  letter-spacing: 1px;
+}
+
+.style-minimal h1 { font-size: 2rem; }
+.style-minimal h2 { font-size: 1.5rem; font-weight: 200; }
+.style-minimal h3 { font-size: 1.2rem; }
+
+.style-minimal p, .style-minimal .subtitle {
+  font-weight: 200;
+  color: #999;
+}
+
+/* ===== Extra Minimal Touches ===== */
+.style-minimal .module-content {
+  padding: 40px 48px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.style-minimal .knowledge-grid {
+  gap: 24px;
+}
+
+/* Minimal divider */
+.style-minimal .card-meta {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+/* Everything is thin and understated */
+.style-minimal * {
+  border-radius: 0 !important;
+}
