@@ -1,0 +1,405 @@
+/**
+ * styles.css - 自定义样式（Tailwind CDN 之外的补充）
+ * 职责：定义动画关键帧、玻璃拟态、流水线节点状态、特殊组件样式
+ */
+
+/* ========== CSS 变量 ========== */
+:root {
+  --accent-start: #6366f1;   /* indigo-500 */
+  --accent-end: #a855f7;     /* purple-500 */
+  --bg-deep: #020617;        /* slate-950 */
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(99, 102, 241, 0.15);
+}
+
+/* ========== 全局基础 ========== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+}
+
+/* ========== 动画关键帧 ========== */
+
+/* 淡入上移 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 淡入 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 脉冲发光 */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50%      { box-shadow: 0 0 16px 4px rgba(99, 102, 241, 0.3); }
+}
+
+/* 流动光效（SVG 连线用） */
+@keyframes flowDash {
+  to { stroke-dashoffset: -24; }
+}
+
+/* 打字机光标闪烁 */
+@keyframes blinkCaret {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* 卡片高亮闪烁 */
+@keyframes highlightFlash {
+  0%, 100% { border-color: rgba(99, 102, 241, 0.3); }
+  50%      { border-color: #6366f1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
+}
+
+/* 内容切换过渡 */
+@keyframes moduleIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ========== 通用工具类 ========== */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-strong {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-module-in {
+  animation: moduleIn 0.3s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-highlight-flash {
+  animation: highlightFlash 0.8s ease-in-out 3;
+}
+
+/* 打字机光标 */
+.typewriter-cursor::after {
+  content: '|';
+  animation: blinkCaret 0.8s step-end infinite;
+  color: #a78bfa;
+  font-weight: 100;
+}
+
+/* ========== 渐变文字 ========== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========== 导航 ========== */
+.nav-item {
+  transition: all 0.2s ease;
+}
+.nav-item:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+.nav-item.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-left: 3px solid #818cf8;
+}
+
+/* ========== 模块1: 智能采集 ========== */
+
+/* 实时日志面板 */
+#capture-log-panel {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  max-height: 200px;
+  overflow-y: auto;
+}
+#capture-log-panel .log-line {
+  padding: 2px 0;
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+/* 摘要卡片 */
+.capture-result-card {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* 知识库卡片 */
+.knowledge-card {
+  transition: all 0.2s ease;
+}
+.knowledge-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* ========== 模块2: 知识对话 ========== */
+
+/* 聊天消息气泡 */
+.chat-bubble-user {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 16px 16px 4px 16px;
+}
+.chat-bubble-ai {
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 16px 16px 16px 4px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* 引用角标 */
+.citation-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+.citation-badge:hover {
+  background: rgba(59, 130, 246, 0.6);
+  transform: scale(1.15);
+}
+
+/* 聊天区域滚动 */
+#chat-messages {
+  scroll-behavior: smooth;
+}
+
+/* ========== 模块3: 流水线 ========== */
+
+/* 节点卡片 */
+.pipeline-node {
+  transition: all 0.4s ease;
+  position: relative;
+}
+
+/* 节点状态：待命 */
+.pipeline-node.idle {
+  border-color: rgba(75, 85, 99, 0.5);
+  background: rgba(30, 41, 59, 0.6);
+}
+
+/* 节点状态：运行中 */
+.pipeline-node.running {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.15);
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+/* 节点状态：完成 */
+.pipeline-node.complete {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+.pipeline-node.complete::after {
+  content: '✅';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 14px;
+}
+
+/* 节点状态：失败 */
+.pipeline-node.failed {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* SVG 连线 */
+.pipeline-connection {
+  stroke: rgba(75, 85, 99, 0.5);
+  stroke-width: 2;
+  transition: stroke 0.5s ease;
+}
+.pipeline-connection.active {
+  stroke: #22c55e;
+  stroke-dasharray: 8 4;
+  animation: flowDash 0.5s linear infinite;
+}
+
+/* 日志流面板 */
+#pipeline-log-panel {
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+#pipeline-log-panel .agent-log-line {
+  padding: 3px 0;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* ========== 模块4: 成果产出 ========== */
+
+/* 富文本预览区 */
+#output-preview {
+  line-height: 1.8;
+}
+#output-preview h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.2em 0 0.6em;
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#output-preview h1:first-child {
+  margin-top: 0;
+}
+#output-preview h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 1em 0 0.4em;
+  color: #c4b5fd;
+}
+#output-preview h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0.8em 0 0.3em;
+  color: #a5b4fc;
+}
+#output-preview p {
+  margin: 0.5em 0;
+  color: #cbd5e1;
+}
+#output-preview ul, #output-preview ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+  color: #cbd5e1;
+}
+#output-preview li {
+  margin: 0.25em 0;
+}
+#output-preview strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+#output-preview blockquote {
+  border-left: 3px solid #6366f1;
+  padding: 0.5em 1em;
+  margin: 0.8em 0;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 0 8px 8px 0;
+  color: #a5b4fc;
+}
+#output-preview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.9rem;
+}
+#output-preview th {
+  background: rgba(99, 102, 241, 0.2);
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #c4b5fd;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+#output-preview td {
+  padding: 8px 12px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  color: #cbd5e1;
+}
+#output-preview hr {
+  border: none;
+  height: 1px;
+  background: rgba(99, 102, 241, 0.2);
+  margin: 1.2em 0;
+}
+#output-preview code {
+  background: rgba(99, 102, 241, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  color: #c4b5fd;
+}
+
+/* ========== AI 思考过程侧栏 ========== */
+#thinking-drawer {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#thinking-drawer.open {
+  transform: translateX(0);
+}
+#thinking-drawer.closed {
+  transform: translateX(100%);
+}
+
+/* ========== 演示模式指示灯 ========== */
+.demo-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-indicator .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ========== Toast 提示 ========== */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.9);
+  color: white;
+  font-size: 14px;
+  animation: fadeInUp 0.3s ease-out;
+  pointer-events: none;
+}
+
+/* ========== 响应式（1024px+） ========== */
+@media (max-width: 1100px) {
+  #thinking-drawer {
+    width: 280px !important;
+  }
+  .pipeline-node {
+    padding: 12px !important;
+    font-size: 0.85rem;
+  }
+}

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 工作站 Demo — Claude Code + DeepSeek 工程化实践</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen font-sans">
+
+  <!-- ==================== 顶部 Header ==================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-indigo-500/20">
+    <div class="max-w-screen-2xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <h1 class="text-xl font-bold gradient-text">AI 工作站 Demo</h1>
+        <span class="hidden lg:inline text-slate-400 text-sm">Claude Code + DeepSeek 工程化实践 - 产品其一展示样本</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="demo-indicator text-sm text-slate-400">
+          <span class="dot"></span> 演示模式
+        </div>
+        <button id="btn-toggle-thinking"
+                class="px-3 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-sm transition-all"
+                aria-label="切换 AI 思考过程侧栏">
+          🧠 思考过程
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== 主体布局 ==================== -->
+  <div class="flex pt-16 min-h-screen">
+
+    <!-- ========== 左侧导航栏 ========== -->
+    <aside class="w-56 lg:w-60 flex-shrink-0 border-r border-slate-800 bg-slate-900/50 flex flex-col">
+      <!-- 导航菜单 -->
+      <nav class="p-3 space-y-1">
+        <button data-module="capture" class="nav-item active w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3" aria-label="切换到智能采集">
+          <span class="text-lg">📡</span> 智能采集
+        </button>
+        <button data-module="chat" class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3" aria-label="切换到知识对话">
+          <span class="text-lg">💬</span> 知识对话
+        </button>
+        <button data-module="pipeline" class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3" aria-label="切换到工作流编排">
+          <span class="text-lg">⚙️</span> 工作流编排
+        </button>
+        <button data-module="deliverables" class="nav-item w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3" aria-label="切换到成果产出">
+          <span class="text-lg">📦</span> 成果产出
+        </button>
+      </nav>
+
+      <!-- 知识库迷你列表（模块 1 相关） -->
+      <div class="mx-3 mt-2 mb-1">
+        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-1">📚 知识库</h3>
+      </div>
+      <div id="knowledge-mini-list" class="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
+        <!-- 动态渲染知识卡迷你版 -->
+      </div>
+    </aside>
+
+    <!-- ========== 主内容区 ========== -->
+    <main class="flex-1 overflow-y-auto relative" id="main-content">
+
+      <!-- 模块 1：智能采集 -->
+      <section id="module-capture" class="module-section p-6 animate-module-in">
+        <div class="max-w-4xl mx-auto space-y-6">
+
+          <!-- 输入区 -->
+          <div class="glass rounded-2xl p-6 space-y-4">
+            <h2 class="text-lg font-semibold flex items-center gap-2">
+              <span>📡</span> 智能采集
+            </h2>
+            <p class="text-sm text-slate-400">输入 URL 或主题，系统将自动抓取、提取正文并生成标签。</p>
+
+            <div class="flex gap-3">
+              <input id="capture-input"
+                     type="text"
+                     placeholder="粘贴一个 URL 或输入主题..."
+                     class="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                     aria-label="采集输入框">
+              <button id="btn-start-capture"
+                      class="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-sm font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center gap-2 whitespace-nowrap"
+                      aria-label="开始采集">
+                ⚡ 开始采集
+              </button>
+            </div>
+
+            <!-- 快捷标签 -->
+            <div class="flex gap-2 flex-wrap">
+              <span class="text-xs text-slate-500">快捷：</span>
+              <button class="quick-tag px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs hover:border-indigo-500 hover:text-indigo-300 transition-all" data-tag="AI 周报">AI 周报</button>
+              <button class="quick-tag px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs hover:border-indigo-500 hover:text-indigo-300 transition-all" data-tag="前端最佳实践">前端最佳实践</button>
+              <button class="quick-tag px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs hover:border-indigo-500 hover:text-indigo-300 transition-all" data-tag="产品方法论">产品方法论</button>
+            </div>
+          </div>
+
+          <!-- 实时日志面板（初始隐藏） -->
+          <div id="capture-log-panel" class="glass rounded-2xl p-4 hidden">
+            <h3 class="text-sm font-semibold text-indigo-300 mb-2">📋 采集日志</h3>
+            <div id="capture-log-content" class="text-xs text-slate-400 font-mono space-y-0.5"></div>
+          </div>
+
+          <!-- 采集结果卡片区 -->
+          <div id="capture-result-area"></div>
+        </div>
+      </section>
+
+      <!-- 模块 2：知识对话 -->
+      <section id="module-chat" class="module-section p-6 hidden">
+        <div class="flex gap-6 h-full max-w-6xl mx-auto" style="min-height: calc(100vh - 80px);">
+
+          <!-- 左侧：知识库勾选区 -->
+          <div class="w-64 lg:w-72 flex-shrink-0 glass rounded-2xl p-4 flex flex-col">
+            <div id="chat-stats-bar" class="text-xs text-slate-400 mb-3 pb-3 border-b border-slate-700">
+              已选 <span id="chat-selected-count" class="text-indigo-300 font-semibold">0</span> 条，约 <span id="chat-estimated-tokens" class="text-indigo-300 font-semibold">0</span> tokens
+            </div>
+            <div id="chat-knowledge-checklist" class="flex-1 overflow-y-auto space-y-2">
+              <!-- 动态渲染 -->
+            </div>
+          </div>
+
+          <!-- 中间：聊天窗口 -->
+          <div class="flex-1 glass rounded-2xl flex flex-col">
+            <!-- 消息列表 -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+              <div class="text-center text-slate-500 text-sm py-8">
+                💡 勾选左侧知识条目，然后在下方输入问题开始对话<br>
+                <span class="text-xs text-slate-600 mt-1 block">试试输入：总结一下 / 最佳实践有哪些 / 如何开始</span>
+              </div>
+            </div>
+            <!-- 输入区 -->
+            <div class="p-4 border-t border-slate-700/50">
+              <div class="flex gap-3">
+                <input id="chat-input"
+                       type="text"
+                       placeholder="输入你的问题..."
+                       class="flex-1 bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+                       aria-label="聊天输入框">
+                <button id="btn-send-message"
+                        class="px-5 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-sm font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all"
+                        aria-label="发送消息">
+                  发送
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 模块 3：工作流编排 -->
+      <section id="module-pipeline" class="module-section p-6 hidden">
+        <div class="max-w-6xl mx-auto space-y-6">
+
+          <!-- 控制条 -->
+          <div class="glass rounded-2xl p-4 flex items-center gap-4 flex-wrap">
+            <label class="text-sm text-slate-400">任务模板：</label>
+            <select id="pipeline-template-select"
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+                    aria-label="选择任务模板">
+              <option value="research">📄 调研报告</option>
+              <option value="social">📰 公众号推文</option>
+              <option value="weekly">📊 周报摘要</option>
+            </select>
+            <button id="btn-run-pipeline"
+                    class="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-sm font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all flex items-center gap-2"
+                    aria-label="运行流水线">
+              ▶️ 运行流水线
+            </button>
+            <button id="btn-reset-pipeline"
+                    class="px-5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm hover:border-slate-500 transition-all"
+                    aria-label="重置流水线">
+              🔄 重置
+            </button>
+          </div>
+
+          <!-- 画布区：4 个节点 + SVG 连线 -->
+          <div class="glass rounded-2xl p-6 lg:p-8 relative overflow-x-auto">
+            <div id="pipeline-canvas" class="flex items-center justify-between gap-4 min-w-[700px] relative" style="z-index:1;">
+              <!-- 节点 1 -->
+              <div id="pipeline-node-0" class="pipeline-node idle flex-1 max-w-[180px] glass rounded-xl p-5 text-center space-y-2">
+                <div class="text-2xl">📥</div>
+                <div class="text-sm font-semibold">输入采集器</div>
+                <div class="text-xs text-slate-500 node-status">待命</div>
+                <div class="text-[10px] text-slate-600 node-model">deepseek-v4-flash</div>
+              </div>
+              <!-- 节点 2 -->
+              <div id="pipeline-node-1" class="pipeline-node idle flex-1 max-w-[180px] glass rounded-xl p-5 text-center space-y-2">
+                <div class="text-2xl">🔬</div>
+                <div class="text-sm font-semibold">研究员 Agent</div>
+                <div class="text-xs text-slate-500 node-status">待命</div>
+                <div class="text-[10px] text-slate-600 node-model">deepseek-v4-pro[1m]</div>
+              </div>
+              <!-- 节点 3 -->
+              <div id="pipeline-node-2" class="pipeline-node idle flex-1 max-w-[180px] glass rounded-xl p-5 text-center space-y-2">
+                <div class="text-2xl">✍️</div>
+                <div class="text-sm font-semibold">写手 Agent</div>
+                <div class="text-xs text-slate-500 node-status">待命</div>
+                <div class="text-[10px] text-slate-600 node-model">deepseek-v4-pro[1m]</div>
+              </div>
+              <!-- 节点 4 -->
+              <div id="pipeline-node-3" class="pipeline-node idle flex-1 max-w-[180px] glass rounded-xl p-5 text-center space-y-2">
+                <div class="text-2xl">🔍</div>
+                <div class="text-sm font-semibold">审稿人 Agent</div>
+                <div class="text-xs text-slate-500 node-status">待命</div>
+                <div class="text-[10px] text-slate-600 node-model">deepseek-v4-flash</div>
+              </div>
+            </div>
+            <!-- SVG 连线层 -->
+            <svg id="pipeline-svg" class="absolute inset-0 pointer-events-none" style="z-index:0; width:100%; height:100%;">
+              <!-- 连线由 JS 动态计算位置 -->
+            </svg>
+          </div>
+
+          <!-- 实时日志流 -->
+          <div id="pipeline-log-panel" class="glass rounded-2xl p-4 hidden">
+            <h3 class="text-sm font-semibold text-indigo-300 mb-2">📋 Agent 执行日志</h3>
+            <div id="pipeline-log-content" class="text-xs text-slate-400 font-mono space-y-0.5 max-h-64 overflow-y-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 模块 4：成果产出 -->
+      <section id="module-deliverables" class="module-section p-6 hidden">
+        <div class="max-w-6xl mx-auto space-y-6">
+
+          <!-- 空状态 -->
+          <div id="deliverables-empty" class="glass rounded-2xl p-12 text-center">
+            <div class="text-4xl mb-4">📦</div>
+            <p class="text-slate-400">尚未生成成果，请先到「工作流编排」运行一次流水线。</p>
+          </div>
+
+          <!-- 有内容状态（初始隐藏） -->
+          <div id="deliverables-content" class="hidden space-y-6">
+
+            <!-- Tab 切换 -->
+            <div class="flex gap-2">
+              <button class="output-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-indigo-500/20 text-indigo-300 border border-indigo-500/30" data-output="research">
+                📄 调研报告
+              </button>
+              <button class="output-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-slate-800 text-slate-400 border border-slate-700" data-output="social">
+                📰 公众号推文
+              </button>
+              <button class="output-tab px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-slate-800 text-slate-400 border border-slate-700" data-output="weekly">
+                📊 周报摘要
+              </button>
+            </div>
+
+            <!-- 内容区 -->
+            <div class="flex gap-6 lg:flex-row flex-col">
+              <!-- 左侧：富文本预览 -->
+              <div class="flex-1 glass rounded-2xl p-6 overflow-y-auto" style="max-height: 70vh;">
+                <div id="output-preview" class="text-sm text-slate-300">
+                  <!-- markdown 渲染结果 -->
+                </div>
+              </div>
+
+              <!-- 右侧：操作面板 -->
+              <div class="w-full lg:w-64 flex-shrink-0 space-y-4">
+                <div class="glass rounded-2xl p-4 space-y-3">
+                  <button id="btn-copy-content"
+                          class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm hover:border-indigo-500 transition-all flex items-center justify-center gap-2"
+                          aria-label="复制全文">
+                    📋 复制全文
+                  </button>
+                  <button id="btn-download-md"
+                          class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm hover:border-indigo-500 transition-all flex items-center justify-center gap-2"
+                          aria-label="下载 Markdown">
+                    ⬇️ 下载 Markdown
+                  </button>
+                  <button id="btn-regenerate"
+                          class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm hover:border-indigo-500 transition-all flex items-center justify-center gap-2"
+                          aria-label="重新生成">
+                    🔄 重新生成
+                  </button>
+                </div>
+
+                <!-- 元数据卡 -->
+                <div id="output-metadata" class="glass rounded-2xl p-4 text-xs space-y-2 text-slate-400">
+                  <h4 class="text-sm font-semibold text-slate-300 mb-2">📋 生成信息</h4>
+                  <!-- 动态填充 -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== AI 思考过程侧栏 ==================== -->
+  <div id="thinking-drawer"
+       class="fixed right-0 top-16 bottom-0 w-80 lg:w-96 glass-strong border-l border-indigo-500/20 closed flex flex-col z-40"
+       style="transform: translateX(100%);">
+    <!-- 头部 -->
+    <div class="p-4 border-b border-slate-700/50 flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-indigo-300">🧠 AI 思考过程</h3>
+      <button id="btn-close-thinking"
+              class="text-slate-500 hover:text-slate-300 transition-colors text-lg"
+              aria-label="关闭思考过程侧栏">
+        ✕
+      </button>
+    </div>
+    <!-- 内容 -->
+    <div id="thinking-content" class="flex-1 overflow-y-auto p-4 text-xs text-slate-400 font-mono space-y-3">
+      <p class="text-slate-600">点击任意模块触发 AI 操作后，此处将展示模型思考过程。</p>
+    </div>
+  </div>
+
+  <!-- ==================== Toast 容器 ==================== -->
+  <div id="toast-container"></div>
+
+  <!-- ==================== 脚本加载（顺序重要） ==================== -->
+  <script src="data/knowledge.js"></script>
+  <script src="data/chat.js"></script>
+  <script src="data/agents.js"></script>
+  <script src="data/outputs.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
